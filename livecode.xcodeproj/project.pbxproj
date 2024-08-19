@@ -11,6 +11,7 @@
 		411485182C72AFB900006239 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411485172C72AFB900006239 /* GameView.swift */; };
 		4114851A2C72BA5700006239 /* LineupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411485192C72BA5700006239 /* LineupsView.swift */; };
 		4114851D2C72BA8800006239 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4114851C2C72BA8800006239 /* StatsView.swift */; };
+		4148EA652C72F2EE00494001 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4148EA642C72F2EE00494001 /* Stats.swift */; };
 		41A0CDAC2C7144EA00F74BFD /* livecodeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */; };
 		41A0CDAE2C7144EA00F74BFD /* LiveCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAD2C7144EA00F74BFD /* LiveCodeView.swift */; };
 		41A0CDB02C7144EC00F74BFD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41A0CDAF2C7144EC00F74BFD /* Assets.xcassets */; };
@@ -45,6 +46,7 @@
 		411485172C72AFB900006239 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameView.swift; path = livecode/NewGame/GameView.swift; sourceTree = SOURCE_ROOT; usesTabs = 0; wrapsLines = 0; };
 		411485192C72BA5700006239 /* LineupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineupsView.swift; sourceTree = "<group>"; };
 		4114851C2C72BA8800006239 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		4148EA642C72F2EE00494001 /* Stats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
 		41A0CDA82C7144EA00F74BFD /* livecode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = livecode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = livecodeApp.swift; sourceTree = "<group>"; };
 		41A0CDAD2C7144EA00F74BFD /* LiveCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveCodeView.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 				41A0CDB12C7144EC00F74BFD /* Preview Content */,
 				41A0CDD72C7147C900F74BFD /* PreviousGamesView.swift */,
 				411485152C72A81600006239 /* Constants.swift */,
+				4148EA642C72F2EE00494001 /* Stats.swift */,
 			);
 			path = livecode;
 			sourceTree = "<group>";
@@ -287,6 +290,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				41A0CDDC2C7150E500F74BFD /* EditRostersView.swift in Sources */,
+				4148EA652C72F2EE00494001 /* Stats.swift in Sources */,
 				41A0CDAE2C7144EA00F74BFD /* LiveCodeView.swift in Sources */,
 				41A0CDAC2C7144EA00F74BFD /* livecodeApp.swift in Sources */,
 				41A0CDD62C7147BC00F74BFD /* NewGameView.swift in Sources */,
@@ -455,6 +459,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"livecode/Preview Content\"";
@@ -466,6 +471,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -473,6 +479,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nolankrutonog.livecode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -484,6 +491,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"livecode/Preview Content\"";
@@ -495,6 +503,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -502,6 +511,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = nolankrutonog.livecode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

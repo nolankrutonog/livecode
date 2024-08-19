@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct GameView: View {
     let homeTeam: String
     let awayTeam: String
@@ -82,6 +83,7 @@ struct GameView: View {
             .disabled(isTimerRunning)
             .padding(.horizontal)
             
+            
             HStack(spacing: 10) {
                 Button(action: { showNewStat = true }) {
                     Text("Stat")
@@ -107,6 +109,7 @@ struct GameView: View {
             StatsView(teamName: homeTeam)
         }
     }
+    
     
     private func timeString(from timeInterval: TimeInterval) -> String {
         let minutes = Int(timeInterval) / 60
