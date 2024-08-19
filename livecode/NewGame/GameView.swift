@@ -22,8 +22,8 @@ struct GameView: View {
     @State private var showHomeStats = false
     @State private var showAwayStats = false
     
-    @State private var homeLineup: [String] = Array(repeating: "", count: 7)
-    @State private var awayLineup: [String] = Array(repeating: "", count: 7)
+    @State private var homeLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
+    @State private var awayLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
     
     init(homeTeam: String, awayTeam: String, gameName: String, quarterLength: Int) {
         self.homeTeam = homeTeam
@@ -107,7 +107,7 @@ struct GameView: View {
             timer?.invalidate()
         }
         .sheet(isPresented: $showLineups) {
-            LineupsView(homeTeam: homeTeam, awayTeam: awayTeam)
+            LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, homeLineup: $homeLineup, awayLineup: $awayLineup)
         }
         .sheet(isPresented: $showHomeStats) {
             StatsView(teamName: homeTeam)

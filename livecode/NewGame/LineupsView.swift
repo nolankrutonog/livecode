@@ -10,38 +10,29 @@ import SwiftUI
 struct LineupsView: View {
     let homeTeam: String
     let awayTeam: String
-    @Binding var homeLineup: [String]
-    @Binding var awayLineup: [String]
     
-    private let userDefaultsHomeTeamKey: String
-    private let userDefaultsAwayTeamKey: String
+    @Binding var homeLineup: [String: Any]
+    @Binding var awayLineup: [String: Any]
     
-    @State private var homeRoster: [String]
-    @State private var awayRoster: [String]
-    
-    init(homeTeam: String, awayTeam: String) {
-        self.homeTeam = homeTeam
-        self.awayTeam = awayTeam
-        userDefaultsHomeTeamKey = "\(homeTeam)_names"
-        userDefaultsAwayTeamKey = "\(awayTeam)_names"
-        
-        _homeRoster = State(initialValue: UserDefaults.standard.array(forKey: userDefaultsHomeTeamKey) as? [String] ?? [])
-        _awayRoster = State(initialValue: UserDefaults.standard.array(forKey: userDefaultsAwayTeamKey) as? [String] ?? [])
-        
-        self._homeLineup = Array(repeating: "", count:7)
-        self._awayLineup = Array(repeating: "", count:7)
-    }
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
-                TeamLineupView(teamName: homeTeam, roster: homeRoster)
-                    .frame(width: geometry.size.width / 2)
+            VStack {
+                HStack(spacing: 0) {
+                    TeamLineupView(teamName: homeTeam, lineup: $homeLineup)
+                        .frame(width: geometry.size.width / 2)
+                    
+                    Divider()
+                    
+                    TeamLineupView(teamName: awayTeam, lineup: $awayLineup)
+                        .frame(width: geometry.size.width / 2)
+                }
                 
-                Divider()
-                
-                TeamLineupView(teamName: awayTeam, roster: awayRoster)
-                    .frame(width: geometry.size.width / 2)
+                Button("Done") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                .padding()
             }
         }
     }
@@ -50,17 +41,15 @@ struct LineupsView: View {
 
 struct TeamLineupView: View {
     let teamName: String
-    let roster: [String]
+    @Binding var lineup: [String: Any]
     
-    @State private var goalie: String = ""
-    @State private var field: [String] = Array(repeating: "", count: 6)
-    @State private var bench: [String]
     @State private var selectedPosition: Position?
+    @State private var bench: [String] = []
     
-    init(teamName: String, roster: [String]) {
+    init(teamName: String, lineup: Binding<[String: Any]>) {
         self.teamName = teamName
-        self.roster = roster
-        _bench = State(initialValue: roster)
+        self._lineup = lineup
+        self._bench = State(initialValue: UserDefaults.standard.array(forKey: "\(teamName)_names") as? [String] ?? [])
     }
     
     var body: some View {
@@ -91,6 +80,17 @@ struct TeamLineupView: View {
             }
             .padding()
         }
+        .onChange(of: bench) { newValue in
+            UserDefaults.standard.set(newValue, forKey: "\(teamName)_bench")
+        }
+    }
+    
+    private var goalie: String {
+        lineup["goalie"] as? String ?? ""
+    }
+    
+    private var field: [String] {
+        lineup["field"] as? [String] ?? Array(repeating: "", count: 6)
     }
     
     private func handleTap(position: Position) {
@@ -126,11 +126,9 @@ struct TeamLineupView: View {
         let fromPlayer = getPlayer(at: from)
         let toPlayer = getPlayer(at: to)
         
-        // Check if either position is on the bench
         let fromIsBench = if case .bench(_) = from { true } else { false }
         let toIsBench = if case .bench(_) = to { true } else { false }
         
-        // Allow swaps between non-empty positions or from bench to empty positions
         return !fromPlayer.isEmpty && (fromIsBench || toIsBench || !toPlayer.isEmpty)
     }
     
@@ -146,11 +144,14 @@ struct TeamLineupView: View {
     }
     
     private func setPlayer(at position: Position, player: String) {
+        var newLineup = lineup
         switch position {
         case .goalie:
-            goalie = player
+            newLineup["goalie"] = player
         case .field(let index):
-            field[index] = player
+            var newField = field
+            newField[index] = player
+            newLineup["field"] = newField
         case .bench(let index):
             if index < bench.count {
                 bench[index] = player
@@ -158,6 +159,7 @@ struct TeamLineupView: View {
                 bench.append(player)
             }
         }
+        lineup = newLineup
     }
 }
 
@@ -178,11 +180,21 @@ struct PlayerSlot: View {
             .padding(5)
             .background(isSelected ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2))
             .cornerRadius(5)
-            .lineLimit(1) // Limit to one line
-            .truncationMode(.tail) // Add ellipsis if the text is too
+            .lineLimit(1)
+            .truncationMode(.tail)
     }
 }
 
-#Preview {
-    LineupsView(homeTeam: "Stanford 2024", awayTeam: "USC 2024")
+struct LineupsView_Previews: PreviewProvider {
+    @State static var homeLineup: [String: Any] = ["goalie": "", "field": ["", "", "", "", "", ""]]
+    @State static var awayLineup: [String: Any] = ["goalie": "", "field": ["", "", "", "", "", ""]]
+    
+    static var previews: some View {
+        LineupsView(
+            homeTeam: "Stanford 2024",
+            awayTeam: "USC 2024",
+            homeLineup: $homeLineup,
+            awayLineup: $awayLineup
+        )
+    }
 }

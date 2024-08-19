@@ -13,4 +13,10 @@ let previousGamesString = "Previous Games"
 
 let userDefaultsRostersKey = "rostersKey"
 
+/*
+ to get the players:
+ "\(rosterName)_names"
+ is the key for userDefaults
+ */
+
 
