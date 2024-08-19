@@ -109,4 +109,8 @@ struct NewGameView: View {
     }
 }
 
+#Preview {
+    NewGameView()
+}
+
 

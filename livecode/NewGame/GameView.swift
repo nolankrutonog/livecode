@@ -13,14 +13,12 @@ struct GameView: View {
     let gameName: String
     let quarterLength: Int
     
-    
     @State private var currentQuarter = 1
     @State private var timeRemaining: TimeInterval
     @State private var timer: Timer?
     @State private var isTimerRunning = false
     @State private var showLineups = false
-    @State private var showHomeStats = false
-    @State private var showAwayStats = false
+    @State private var showNewStat = false
     
     @State private var homeLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
     @State private var awayLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
@@ -39,8 +37,16 @@ struct GameView: View {
                 Text("Quarter: \(currentQuarter)")
                     .font(.title3)
                 
+                Spacer()
+                
                 Stepper("", value: $currentQuarter, in: 1...99)
                     .labelsHidden()
+                
+                Button(action: resetTimer) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .foregroundColor(isTimerRunning ? .gray : .blue)
+                }
+                .disabled(isTimerRunning)
             }
             .padding(.horizontal)
             
@@ -77,43 +83,28 @@ struct GameView: View {
             .padding(.horizontal)
             
             HStack(spacing: 10) {
-                Button(action: { showHomeStats = true }) {
-                    Text(homeTeam)
+                Button(action: { showNewStat = true }) {
+                    Text("Stat")
                         .font(.title2)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(15)
-                        .shadow(color: Color.blue.opacity(0.5), radius: 5, x: 0, y: 5)
                 }
                 
-                Button(action: { showAwayStats = true }) {
-                    Text(awayTeam)
-                        .font(.title2)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
-                        .shadow(color: Color.red.opacity(0.5), radius: 5, x: 0, y: 5)
-                }
             }
             .padding(.horizontal)
             Spacer()
         }
-        .navigationBarHidden(true)
         .onDisappear {
             timer?.invalidate()
         }
         .sheet(isPresented: $showLineups) {
             LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, homeLineup: $homeLineup, awayLineup: $awayLineup)
         }
-        .sheet(isPresented: $showHomeStats) {
+        .sheet(isPresented: $showNewStat) {
             StatsView(teamName: homeTeam)
-        }
-        .sheet(isPresented: $showAwayStats) {
-            StatsView(teamName: awayTeam)
         }
     }
     
@@ -139,6 +130,12 @@ struct GameView: View {
             }
         }
         isTimerRunning.toggle()
+    }
+    
+    private func resetTimer() {
+        if !isTimerRunning {
+            timeRemaining = TimeInterval(quarterLength * 60)
+        }
     }
 }
 
