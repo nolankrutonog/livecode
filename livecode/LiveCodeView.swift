@@ -6,10 +6,23 @@
 //
 
 import SwiftUI
+import FirebaseCore
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    FirebaseApp.configure()
+
+    return true
+  }
+}
+
 
 struct LiveCodeView: View {
+    // DO NOT DELETE: for Firebase
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Solid white background
                 Color.white
@@ -30,8 +43,14 @@ struct LiveCodeView: View {
                     }
 
                     NavigationLink(destination: NewGameView()) {
-                        MenuButton(title: "New Game", icon: "play.circle")
+                        MenuButton(title: "Start New Game", icon: "plus.circle")
                     }
+                    
+                    
+                    NavigationLink(destination: LiveGameView()) {
+                        MenuButton(title: "Live Games", icon: "play.circle")
+                    }
+                    
 
                     NavigationLink(destination: PreviousGamesView()) {
                         MenuButton(title: "Previous Games", icon: "clock.arrow.circlepath")
@@ -41,10 +60,17 @@ struct LiveCodeView: View {
                 }
                 .padding()
             }
-//            .navigationBarHidden(true)
         }
     }
     
+}
+
+struct LiveGameView: View {
+    var body: some View {
+        VStack {
+            
+        }
+    }
 }
 
 struct MenuButton: View {

@@ -75,6 +75,7 @@ struct NewGameView: View {
             .padding()
         }
         .navigationTitle("New Game")
+        
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadRosters)
         .onChange(of: homeTeam) { _, _ in updateGameName() }
@@ -95,6 +96,10 @@ struct NewGameView: View {
     }
 }
 
-#Preview {
-    NewGameView()
+struct NewGameView_Preview: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            NewGameView()
+        }
+    }
 }

@@ -7,12 +7,18 @@
 
 import SwiftUI
 
+struct Lineup {
+    var goalie: String = ""
+    var fieldPlayers: [String] = Array(repeating: "", count: 6)
+}
 
 struct GameView: View {
     let homeTeam: String
     let awayTeam: String
     let gameName: String
     let quarterLength: Int
+    
+    var game: Game
     
     @State private var currentQuarter = 1
     @State private var timeRemaining: TimeInterval
@@ -21,8 +27,13 @@ struct GameView: View {
     @State private var showLineups = false
     @State private var showNewStat = false
     
-    @State private var homeLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
-    @State private var awayLineup: [String: Any] = ["goalie": "", "field": ["","","","","",""]]
+    @State private var homeLineup: Lineup
+    @State private var homeBench: [String]
+    @State private var awayLineup: Lineup
+    @State private var awayBench: [String]
+    
+    @State private var showingAlert = false
+    @State private var navigateToFinishedGameStats = false
     
     init(homeTeam: String, awayTeam: String, gameName: String, quarterLength: Int) {
         self.homeTeam = homeTeam
@@ -30,6 +41,12 @@ struct GameView: View {
         self.gameName = gameName
         self.quarterLength = quarterLength
         _timeRemaining = State(initialValue: TimeInterval(quarterLength * 60))
+        self.game = Game(homeTeam: homeTeam, awayTeam: awayTeam, gameName: gameName, events: [])
+        
+        self.homeLineup = Lineup()
+        self.homeBench = UserDefaults.standard.array(forKey: "\(homeTeam)_names") as? [String] ?? []
+        self.awayLineup = Lineup()
+        self.awayBench = UserDefaults.standard.array(forKey: "\(awayTeam)_names") as? [String] ?? []
     }
     
     var body: some View {
@@ -67,11 +84,11 @@ struct GameView: View {
             }
             .padding(.horizontal)
             
-            Button(action: {
-                if !isTimerRunning {
-                    showLineups = true
-                }
-            }) {
+            NavigationLink(
+                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, 
+                                                   homeLineup: $homeLineup, homeBench: $homeBench,
+                                                   awayLineup: $awayLineup, awayBench: $awayBench)
+            ) {
                 Text("Lineups")
                     .font(.title2)
                     .padding()
@@ -79,35 +96,64 @@ struct GameView: View {
                     .background(Color.gray.opacity(0.2))
                     .foregroundColor(isTimerRunning ? .gray : .primary)
                     .cornerRadius(10)
+                    .padding(.horizontal)
             }
             .disabled(isTimerRunning)
-            .padding(.horizontal)
-            
-            
-            HStack(spacing: 10) {
-                Button(action: { showNewStat = true }) {
-                    Text("Stat")
-                        .font(.title2)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
+            .onTapGesture {
+                if !isTimerRunning {
+                    showLineups = true
                 }
-                
+            }
+            
+            
+            Button(action: { showNewStat = true }) {
+                Text("Stat")
+                    .font(.title2)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
             .padding(.horizontal)
+            
             Spacer()
+            
+            Button(action: {
+                showingAlert = true
+            }) {
+                Text("Finish Game")
+                    .font(.title2)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .padding()
+            .alert(isPresented: $showingAlert) {
+                Alert(
+                   title: Text("Are you sure you want to finish the game?"),
+                   primaryButton: .destructive(Text("Finish")) {
+                       navigateToFinishedGameStats = true
+                   },
+                   secondaryButton: .cancel()
+                )
+            }
+           .navigationDestination(isPresented: $navigateToFinishedGameStats) {
+               FinishedGameStatsView()
+           }
         }
         .onDisappear {
             timer?.invalidate()
         }
-        .sheet(isPresented: $showLineups) {
-            LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, homeLineup: $homeLineup, awayLineup: $awayLineup)
-        }
+//        .sheet(isPresented: $showLineups) {
+//            LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, homeLineup: $homeLineup, awayLineup: $awayLineup)
+//        }
         .sheet(isPresented: $showNewStat) {
-            StatsView(teamName: homeTeam)
+            MakeStatView(teamName: homeTeam)
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     
@@ -143,14 +189,14 @@ struct GameView: View {
 }
 
 
-struct StatsView: View {
-    let teamName: String
-    
-    var body: some View {
-        Text("Stats for \(teamName)")
-    }
-}
 
-#Preview {
-    GameView(homeTeam: "Stanford 2024", awayTeam: "USC 2024", gameName: "Stanford 2024 vs. USC 2024 8/18/2024", quarterLength: 8)
+
+
+
+struct GameView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            GameView(homeTeam: "Stanford", awayTeam: "USC", gameName: "Stanford 2024 vs. USC 2024 8/18/2024", quarterLength: 8)
+        }
+    }
 }
