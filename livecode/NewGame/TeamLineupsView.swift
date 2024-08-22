@@ -12,169 +12,153 @@ struct TeamLineupView: View {
     @Binding var lineup: Lineup
     @Binding var bench: [String]
     
-    @State private var selectedPlayerTag: Int = -1
-    
-    @State private var dummyBench: [String] = (0...9).map { "player\($0)"}
-    
-    init(teamName: String, lineup: Binding<Lineup>, bench: Binding<[String]>) {
-        self.teamName = teamName
-        self._lineup = lineup
-        self._bench = bench
-    }
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    let maxFieldPlayers = 6
     
     var body: some View {
-        VStack {
-            VStack {
-                // Field Section
-                Text("Field")
-                    .font(.headline)
-                    .padding(.bottom, 5)
+        GeometryReader { geometry in
+            VStack(spacing: 20) {
+                inTheGameView(players: $lineup.fieldPlayers, otherPlayers: $bench, height: geometry.size.height * 0.45)
+                benchView(players: $bench, otherPlayers: $lineup.fieldPlayers, height: geometry.size.height * 0.45)
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .padding()
+    }
+    
+    
+    func inTheGameView(players: Binding<[String]>, otherPlayers: Binding<[String]>, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("In the game")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
+                    .shadow(color:.gray.opacity(0.2), radius: 5, x: 0, y: 2)
                 
-                HStack(spacing: 10) {
-                    VStack {
-                        PlayerContainer(containerTag: 0, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 0)
-                            }
-                        PlayerContainer(containerTag: 1, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 1)
-                            }
-                    }
-                    VStack {
-                        PlayerContainer(containerTag: 2, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 2)
-                            }
-                        PlayerContainer(containerTag: 3, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 3)
-                            }
-                        
-                    }
-                    VStack {
-                        PlayerContainer(containerTag: 4, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 4)
-                            }
-                        PlayerContainer(containerTag: 5, playerName: "", playerBlock: nil)
-                            .onTapGesture {
-                                movePlayer(at: 5)
-                            }
-                    }
-
-                    
-                }
-                .padding()
-                
-                // Goalie Section
-                Text("Goalie")
-                    .font(.headline)
-                    .padding(.top, 10)
-                PlayerContainer(containerTag: 6, playerName: "", playerBlock: nil)
-                    .onTapGesture {
-                        movePlayer(at: 6)
-                    }
-
-                Divider()
-                
-                VStack {
-                    Text("Bench")
-                        .font(.headline)
-                    
-                    ScrollView {
-                        LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 4), // 4 columns with spacing
-                            spacing: 16 // Vertical spacing between rows
-                        ) {
-                            ForEach(dummyBench.indices, id: \.self) { index in
-                                PlayerBlock(playerTag: index, playerName: dummyBench[index], selectedPlayerTag: $selectedPlayerTag)
-                                    .onTapGesture {
-                                        if selectedPlayerTag == -1 {
-                                            selectedPlayerTag = index
-                                        } else if selectedPlayerTag != index {
-                                            dummyBench.swapAt(selectedPlayerTag, index)
-                                            selectedPlayerTag = -1
-                                        }
-                                        else {
-                                            selectedPlayerTag = -1
-                                        }
-                                    }
-                            }
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 15) {
+                        ForEach(players.wrappedValue, id: \.self) { player in
+                            Text(player)
+                                .frame(height: 80)
+                                .frame(maxWidth: .infinity)
+                                .background(.green.opacity(0.8))
+                                .cornerRadius(8)
+                                .shadow(color: .green.opacity(0.3), radius: 2, x: 0, y: 1)
+                                .onDrag {
+                                    NSItemProvider(object: player as NSString)
+                                }
                         }
-                        .padding(.horizontal, 16) // Add padding to the sides of the grid
+                    }
+                    .padding()
+                }
+            }
+            .frame(height: height)
+            .onDrop(of: [.text], delegate: BoxDropDelegate(destinationBoxes: players, sourceBoxes: otherPlayers, isInTheGame: true, maxFieldPlayers: maxFieldPlayers))
+
+        }
+    }
+    func benchView(players: Binding<[String]>, otherPlayers: Binding<[String]>, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Bench")
+                .font(.headline)
+                .foregroundStyle(.primary)
+            
+                        ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
+                    .shadow(color:.gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 15) {
+                        ForEach(players.wrappedValue, id: \.self) { player in
+                            Text(player)
+                                .frame(height: 80)
+                                .frame(maxWidth: .infinity)
+                                .background(.gray.opacity(0.8))
+                                .cornerRadius(8)
+                                .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
+                                .onDrag {
+                                    NSItemProvider(object: player as NSString)
+                                }
+                        }
+                    }
+                    .padding()
+                }
+            }
+            .frame(height: height)
+            .onDrop(of: [.text], delegate: BoxDropDelegate(destinationBoxes: players, sourceBoxes: otherPlayers, isInTheGame: false, maxFieldPlayers: maxFieldPlayers))
+
+        }
+    }
+
+}
+
+struct BoxDropDelegate: DropDelegate {
+    @Binding var destinationBoxes: [String]
+    @Binding var sourceBoxes: [String]
+    
+    let isInTheGame: Bool
+    let maxFieldPlayers: Int
+    
+    func performDrop(info: DropInfo) -> Bool {
+        guard let itemProvider = info.itemProviders(for: [.text]).first else { return false }
+        
+        itemProvider.loadObject(ofClass: NSString.self) { (reading, error) in
+            if let error = error {
+                print("Error loading dragged item: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let item = reading as? String else { return }
+            
+            DispatchQueue.main.async {
+                if let sourceIndex = self.sourceBoxes.firstIndex(of: item) {
+                    self.sourceBoxes.remove(at: sourceIndex)
+                    
+                    if self.isInTheGame {
+                        if self.destinationBoxes.count < self.maxFieldPlayers {
+                            self.destinationBoxes.append(item)
+                        } else {
+                            // If "In the game" is full, put the player back in the source
+                            self.sourceBoxes.insert(item, at: sourceIndex)
+                        }
+                    } else {
+                        // Moving to bench, always allow
+                        self.destinationBoxes.insert(item, at: 0)
                     }
                 }
-                .frame(maxHeight: .infinity)
-                .padding()
-                
-                Spacer()
             }
         }
+        return true
     }
-    
-    private func movePlayer(at index: Int) {
-        if selectedPlayerTag != -1 {
-            
-        }
-    }
-    
-//    private func createPlayerContainer() -> PlayerContainer {
-//       PlayerContainer(
-//    }
-    
-    
 }
     
 
-
-struct PlayerContainer: View {
-    let containerTag: Int
-    let playerName: String
-    var playerBlock: PlayerBlock?
+// TESTING
+struct TeamLineupContainerView: View {
+    @State var lineup: Lineup
+    @State var bench: [String]
+    let teamName: String
     
     var body: some View {
-        ZStack {
-            if let playerBlock = playerBlock {
-                playerBlock
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2)) // Match the default background color of a PlayerBlock
-                    .frame(width: 90, height: 90) // Set the same size as PlayerBlock
-                    .cornerRadius(15) // Match the corner radius of PlayerBlock
-            }
-        }
-        .onTapGesture {
-            
-        }
+        TeamLineupView(teamName: teamName, lineup: $lineup, bench: $bench)
     }
 }
-
-struct PlayerBlock: View {
-    let playerTag: Int
-    let playerName: String
-    @Binding var selectedPlayerTag: Int
-    
-    var body: some View {
-        Text(playerName)
-            .multilineTextAlignment(.center) // Center align the text
-            .padding(3)
-            .frame(width: 80, height: 80) // Ensure it's a square
-            .background(playerTag == selectedPlayerTag ? Color.blue : Color.gray.opacity(0.2))
-            .cornerRadius(15)
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(Color.gray.opacity(0.5), lineWidth: 1) // Optional border
-            )
-    }
-}
-
 
 struct TeamLineupsView_Previews: PreviewProvider {
-    @State static var lineup: Lineup = Lineup()
-    @State static var bench: [String] = (0...9).map { "player\($0)" }
     static var previews: some View {
-        
-        TeamLineupView(teamName: "Stanford", lineup: $lineup, bench: $bench)
+        TeamLineupContainerView(
+            lineup: Lineup(fieldPlayers: ["Player10", "Player11"]),
+            bench: (0...9).map { "Player\($0)" },
+            teamName: "Stanford"
+        )
     }
 }

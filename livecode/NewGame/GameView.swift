@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Lineup {
     var goalie: String = ""
-    var fieldPlayers: [String] = Array(repeating: "", count: 6)
+    var fieldPlayers: [String] = []
 }
 
 struct GameView: View {

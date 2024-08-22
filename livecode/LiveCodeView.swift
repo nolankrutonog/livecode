@@ -38,17 +38,17 @@ struct LiveCodeView: View {
                     Spacer()
                     
                     // Navigation buttons
-                    NavigationLink(destination: EditRostersView()) {
-                        MenuButton(title: "Edit Rosters", icon: "list.bullet")
-                    }
+//                    NavigationLink(destination: EditRostersView()) {
+//                        MenuButton(title: "Edit Rosters", icon: "list.bullet")
+//                    }
 
                     NavigationLink(destination: NewGameView()) {
                         MenuButton(title: "Start New Game", icon: "plus.circle")
                     }
                     
                     
-                    NavigationLink(destination: LiveGameView()) {
-                        MenuButton(title: "Live Games", icon: "play.circle")
+                    NavigationLink(destination: FollowLiveGameView()) {
+                        MenuButton(title: "Follow Live Game", icon: "play.circle")
                     }
                     
 
@@ -59,13 +59,22 @@ struct LiveCodeView: View {
                     Spacer()
                 }
                 .padding()
+                .toolbar {
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: EditRostersView()) {
+                            Image(systemName: "list.triangle")
+                        }
+                    }
+                }
             }
         }
     }
-    
+   
 }
 
-struct LiveGameView: View {
+
+struct FollowLiveGameView: View {
     var body: some View {
         VStack {
             
