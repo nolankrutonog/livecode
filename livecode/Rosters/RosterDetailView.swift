@@ -1,76 +1,11 @@
 //
-//  EditRostersView.swift
+//  RosterDetailView.swift
 //  livecode
 //
-//  Created by Nolan Krutonog on 8/17/24.
+//  Created by Nolan Krutonog on 8/22/24.
 //
 
 import SwiftUI
-
-struct EditRostersView: View {
-    @State private var rosters: [String] = []
-    @State private var selectedRosterIdx: Int? = nil
-    @State private var navigateToRosterDetail = false
-    
-    var body: some View {
-        VStack {
-            List {
-                ForEach(rosters.indices, id: \.self) { index in
-                    NavigationLink(destination: RosterDetailView(rosterName: $rosters[index], onSave: saveRosters)) {
-                        Text(rosters[index])
-                            .font(.headline)
-                    }
-                }
-                .onDelete(perform: deleteRoster)
-            }
-                
-        }
-        .navigationTitle("Rosters")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear(perform: loadRosters)
-        .overlay(
-            Button(action: addRoster) {
-                Image(systemName: "plus")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .clipShape(Circle())
-                    .padding(.trailing)
-            }
-            .padding()
-            .shadow(radius: 2),
-            alignment: .bottomTrailing
-        )
-
-    }
-    
-    func addRoster() {
-        let newRosterName = "New Roster"
-        rosters.append(newRosterName)
-        saveRosters()
-        selectedRosterIdx = rosters.count - 1
-        navigateToRosterDetail = true
-    }
-    
-    func deleteRoster(at offsets: IndexSet) {
-        rosters.remove(atOffsets: offsets)
-        saveRosters()
-    }
-    
-    func saveRosters() {
-        UserDefaults.standard.set(rosters, forKey: userDefaultsRostersKey)
-    }
-    
-    func loadRosters() {
-        if let savedRosters = UserDefaults.standard.array(forKey: userDefaultsRostersKey) as? [String] {
-            rosters = savedRosters
-        }
-    }
-}
-
-
 
 struct RosterDetailView: View {
     @Binding var rosterName: String
@@ -164,6 +99,16 @@ struct RosterDetailView: View {
     private func loadNames() {
         if let savedNames = UserDefaults.standard.array(forKey: "\(rosterName)_names") as? [String] {
             names = savedNames
+        }
+    }
+}
+
+struct RosterDetailView_Preview: PreviewProvider {
+    @State static var sampleRosterName = "Sample Roster"
+
+    static var previews: some View {
+        RosterDetailView(rosterName: $sampleRosterName) {
+            print("Save action triggered")
         }
     }
 }

@@ -62,7 +62,7 @@ struct LiveCodeView: View {
                 .toolbar {
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: EditRostersView()) {
+                        NavigationLink(destination: RostersView()) {
                             Image(systemName: "list.triangle")
                         }
                     }
