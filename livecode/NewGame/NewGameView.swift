@@ -16,6 +16,7 @@ struct NewGameView: View {
     @State private var isGameNameEdited: Bool = false
     @State private var navigateToGame = false
     
+    // waits for firebaseManager to fetchRosters
     @State private var isLoading: Bool = true
     
     var generatedGameName: String {

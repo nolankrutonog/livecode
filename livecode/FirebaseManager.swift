@@ -90,7 +90,6 @@ class FirebaseManager: ObservableObject {
 
     func fetchRosters() async {
         guard !isFetched else { return }
-        
         isFetched = true
         
         do {

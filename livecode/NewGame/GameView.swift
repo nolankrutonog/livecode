@@ -27,6 +27,9 @@ struct GameView: View {
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
     
+    // used to only call onAppear once (setting benches & creating firebase game)
+    @State private var hasAppeared = false
+    
     init(homeTeam: String, awayTeam: String, gameName: String) {
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -83,6 +86,7 @@ struct GameView: View {
             }
             .padding(.horizontal)
             .padding(.bottom)
+           
             
             // Larger Lineups button
             NavigationLink(
@@ -142,12 +146,16 @@ struct GameView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            Task {
-                // TODO: uncomment when doing stats
-//                await firebaseManager.createGameDocument(gameName: gameName)
+            if !hasAppeared {
+                hasAppeared = true // Set this to true so it only runs once
+                
+                Task {
+                    // TODO: uncomment when doing stats
+                    // await firebaseManager.createGameDocument(gameName: gameName)
+                }
+                homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
+                awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
             }
-            homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
-            awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
         }
     }
 
@@ -161,11 +169,6 @@ struct GameView_Previews: PreviewProvider {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
                      gameName: "Stanford vs. UCLA 08-18-2024")
             .environmentObject(firebaseManager)
-        }
-        .onAppear {
-            Task {
-                await firebaseManager.fetchRosters()
-            }
         }
     }
 }
