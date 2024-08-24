@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-struct Lineup {
-    var goalie: String = ""
-    var fieldPlayers: [String] = []
-}
-
 struct GameView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     
@@ -24,10 +19,10 @@ struct GameView: View {
     @State private var currentQuarter = 1
     @State private var showNewStat = false
     
-    @State private var homeLineup = Lineup()
-    @State private var homeBench: [String] = []
-    @State private var awayLineup = Lineup()
-    @State private var awayBench: [String] = []
+    @State private var homeInTheGame = Lineup()
+    @State private var homeBench = Lineup()
+    @State private var awayInTheGame = Lineup()
+    @State private var awayBench = Lineup()
     
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
@@ -92,8 +87,8 @@ struct GameView: View {
             // Larger Lineups button
             NavigationLink(
                 destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam,
-                                         homeLineup: $homeLineup, homeBench: $homeBench,
-                                         awayLineup: $awayLineup, awayBench: $awayBench)
+                                         homeInTheGame: $homeInTheGame, homeBench: $homeBench,
+                                         awayInTheGame: $awayInTheGame, awayBench: $awayBench)
             ) {
                 Text("Lineups")
                     .font(.title)
@@ -148,10 +143,11 @@ struct GameView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             Task {
-                await firebaseManager.createGameDocument(gameName: gameName)
+                // TODO: uncomment when doing stats
+//                await firebaseManager.createGameDocument(gameName: gameName)
             }
-            homeBench = firebaseManager.getPlayersOf(teamName: homeTeam)
-            awayBench = firebaseManager.getPlayersOf(teamName: awayTeam)
+            homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
+            awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
         }
     }
 
@@ -159,11 +155,17 @@ struct GameView: View {
 
 
 struct GameView_Previews: PreviewProvider {
+    @StateObject static var firebaseManager = FirebaseManager()
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
                      gameName: "Stanford vs. UCLA 08-18-2024")
-            .environmentObject(FirebaseManager())
+            .environmentObject(firebaseManager)
+        }
+        .onAppear {
+            Task {
+                await firebaseManager.fetchRosters()
+            }
         }
     }
 }

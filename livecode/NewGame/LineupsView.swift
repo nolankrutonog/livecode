@@ -12,10 +12,10 @@ struct LineupsView: View {
     let homeTeam: String
     let awayTeam: String
     
-    @Binding var homeLineup: Lineup
-    @Binding var homeBench: [String]
-    @Binding var awayLineup: Lineup
-    @Binding var awayBench: [String]
+    @Binding var homeInTheGame: Lineup
+    @Binding var homeBench: Lineup
+    @Binding var awayInTheGame: Lineup
+    @Binding var awayBench: Lineup
 
     @Environment(\.presentationMode) var presentationMode
     
@@ -53,15 +53,20 @@ struct LineupsView: View {
             
             // Content View
             if selectedTab == 0 {
-                TeamLineupView(teamName: homeTeam, lineup: $homeLineup, bench: $homeBench)
+                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench)
             } else {
-                TeamLineupView(teamName: awayTeam, lineup: $awayLineup, bench: $awayBench)
+                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench)
             }
             
             Spacer()
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Done") {
                     presentationMode.wrappedValue.dismiss()
@@ -72,21 +77,32 @@ struct LineupsView: View {
 }
 
 struct LineupsView_Previews: PreviewProvider {
-    @State static var homeLineup: Lineup = Lineup()
-            
-
-    @State static var homeBench: [String] = UserDefaults.standard.array(forKey: "Stanford_names") as? [String] ?? []
-    @State static var awayLineup: Lineup = Lineup()
-    @State static var awayBench: [String] = UserDefaults.standard.array(forKey: "UCLA_names") as? [String] ?? []
-
+    @StateObject static var firebaseManager = FirebaseManager()
+    @State static var homeInTheGame: Lineup = Lineup()
+    @State static var homeBench: Lineup = Lineup()
+    @State static var awayInTheGame: Lineup = Lineup()
+    @State static var awayBench: Lineup = Lineup()
+    
     static var previews: some View {
         LineupsView(
             homeTeam: "Stanford",
             awayTeam: "UCLA",
-            homeLineup: $homeLineup,
+            homeInTheGame: $homeInTheGame,
             homeBench: $homeBench,
-            awayLineup: $awayLineup,
+            awayInTheGame: $awayInTheGame,
             awayBench: $awayBench
         )
+        .environmentObject(firebaseManager)
+        .onAppear {
+            Task {
+                await firebaseManager.fetchRosters()
+            }
+            homeBench = firebaseManager.getFullLineupOf(teamName: "Stanford")
+            awayBench = firebaseManager.getFullLineupOf(teamName: "UCLA")
+
+
+        }
     }
 }
+
+

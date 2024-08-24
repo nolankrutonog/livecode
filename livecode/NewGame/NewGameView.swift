@@ -16,6 +16,8 @@ struct NewGameView: View {
     @State private var isGameNameEdited: Bool = false
     @State private var navigateToGame = false
     
+    @State private var isLoading: Bool = true
+    
     var generatedGameName: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM-dd-yyyy"
@@ -28,10 +30,13 @@ struct NewGameView: View {
     }
     
     var body: some View {
-        if firebaseManager.rosters.isEmpty {
+        if isLoading {
             ProgressView("Loading rosters...")
-                .onAppear() {
-                    firebaseManager.fetchRosters()
+                .onAppear {
+                    Task {
+                        await firebaseManager.fetchRosters()
+                        isLoading = false
+                    }
                 }
         } else {
             VStack(spacing: 0) {
@@ -43,7 +48,6 @@ struct NewGameView: View {
                                 Text(teamName).tag(teamName)
                             }
                         }
-                        
                         
                         Picker("Away Team", selection: $awayTeam) {
                             Text("Select Away Team").tag("")
@@ -59,7 +63,6 @@ struct NewGameView: View {
                                 isGameNameEdited = true
                             }
                     }
-                    
                 }
                 
                 NavigationLink(destination: GameView(homeTeam: homeTeam,
@@ -67,7 +70,6 @@ struct NewGameView: View {
                                                      gameName: gameName)
                     .environmentObject(firebaseManager)
                 ) {
-                    
                     Text("Start Game")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -79,7 +81,6 @@ struct NewGameView: View {
                 .padding()
             }
             .navigationTitle("New Game")
-            
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: homeTeam) { _, _ in updateGameName() }
             .onChange(of: awayTeam) { _, _ in updateGameName() }
@@ -92,8 +93,8 @@ struct NewGameView: View {
             gameName = generatedGameName
         }
     }
-    
 }
+
 
 struct NewGameView_Preview: PreviewProvider {
     static var previews: some View {
