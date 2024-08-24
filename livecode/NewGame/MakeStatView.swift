@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct MakeStatView: View {
-    let teamName: String
+//    let teamName: String
     
     var body: some View {
         
-        Text("Stats for \(teamName)")
+        Text("Stats Page")
     }
 }

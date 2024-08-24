@@ -41,6 +41,7 @@
 		411753552C759531007B3717 /* TeamLineupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411753542C759531007B3717 /* TeamLineupsView.swift */; };
 		4148EA652C72F2EE00494001 /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4148EA642C72F2EE00494001 /* Stats.swift */; };
 		416822732C783AFB007E7190 /* EditRostersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416822722C783AFB007E7190 /* EditRostersView.swift */; };
+		4168A8362C7922FA00CFA510 /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A8352C7922FA00CFA510 /* FirebaseManager.swift */; };
 		41A0CDAC2C7144EA00F74BFD /* livecodeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */; };
 		41A0CDAE2C7144EA00F74BFD /* LiveCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAD2C7144EA00F74BFD /* LiveCodeView.swift */; };
 		41A0CDB02C7144EC00F74BFD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 41A0CDAF2C7144EC00F74BFD /* Assets.xcassets */; };
@@ -81,6 +82,7 @@
 		411753542C759531007B3717 /* TeamLineupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamLineupsView.swift; sourceTree = "<group>"; };
 		4148EA642C72F2EE00494001 /* Stats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stats.swift; sourceTree = "<group>"; };
 		416822722C783AFB007E7190 /* EditRostersView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRostersView.swift; sourceTree = "<group>"; };
+		4168A8352C7922FA00CFA510 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
 		41A0CDA82C7144EA00F74BFD /* livecode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = livecode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = livecodeApp.swift; sourceTree = "<group>"; };
 		41A0CDAD2C7144EA00F74BFD /* LiveCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveCodeView.swift; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				411485152C72A81600006239 /* Constants.swift */,
 				4148EA642C72F2EE00494001 /* Stats.swift */,
 				4115BD9C2C76F47800439A25 /* TestView.swift */,
+				4168A8352C7922FA00CFA510 /* FirebaseManager.swift */,
 			);
 			path = livecode;
 			sourceTree = "<group>";
@@ -391,6 +394,7 @@
 				411753512C73E375007B3717 /* FinishedGameStats.swift in Sources */,
 				411485182C72AFB900006239 /* GameView.swift in Sources */,
 				416822732C783AFB007E7190 /* EditRostersView.swift in Sources */,
+				4168A8362C7922FA00CFA510 /* FirebaseManager.swift in Sources */,
 				4114851A2C72BA5700006239 /* LineupsView.swift in Sources */,
 				4114851D2C72BA8800006239 /* StatsView.swift in Sources */,
 			);

@@ -13,122 +13,123 @@ struct Lineup {
 }
 
 struct GameView: View {
+    @EnvironmentObject var firebaseManager: FirebaseManager
+    
     let homeTeam: String
     let awayTeam: String
     let gameName: String
-    let quarterLength: Int
     
     var game: Game
     
     @State private var currentQuarter = 1
-    @State private var timeRemaining: TimeInterval
-    @State private var timer: Timer?
-    @State private var isTimerRunning = false
-    @State private var showLineups = false
     @State private var showNewStat = false
     
-    @State private var homeLineup: Lineup
-    @State private var homeBench: [String]
-    @State private var awayLineup: Lineup
-    @State private var awayBench: [String]
+    @State private var homeLineup = Lineup()
+    @State private var homeBench: [String] = []
+    @State private var awayLineup = Lineup()
+    @State private var awayBench: [String] = []
     
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
     
-    init(homeTeam: String, awayTeam: String, gameName: String, quarterLength: Int) {
+    init(homeTeam: String, awayTeam: String, gameName: String) {
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
         self.gameName = gameName
-        self.quarterLength = quarterLength
-        _timeRemaining = State(initialValue: TimeInterval(quarterLength * 60))
         self.game = Game(homeTeam: homeTeam, awayTeam: awayTeam, gameName: gameName, events: [])
-        
-        self.homeLineup = Lineup()
-        self.homeBench = UserDefaults.standard.array(forKey: "\(homeTeam)_names") as? [String] ?? []
-        self.awayLineup = Lineup()
-        self.awayBench = UserDefaults.standard.array(forKey: "\(awayTeam)_names") as? [String] ?? []
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text("Quarter: \(currentQuarter)")
-                    .font(.title3)
+                Spacer() // Center the title
+                Text("\(homeTeam) vs. \(awayTeam)")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding()
+                Spacer() // Center the title
+            }
+            
+            Spacer()
+            
+            Text("Quarter")
+                .font(.title)
+                .padding(.horizontal)
+            
+            HStack {
+                Button(action: {
+                    if currentQuarter > 1 {
+                        currentQuarter -= 1
+                    }
+                }) {
+                    Text("-")
+                        .font(.largeTitle)
+                        .frame(width: 60, height: 60)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(30)
+                }
                 
                 Spacer()
                 
-                Stepper("", value: $currentQuarter, in: 1...99)
-                    .labelsHidden()
+                Text("\(currentQuarter)")
+                    .font(.system(size: 48, weight: .bold, design: .default))
                 
-                Button(action: resetTimer) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .foregroundColor(isTimerRunning ? .gray : .blue)
+                Spacer()
+                
+                Button(action: {
+                    currentQuarter += 1
+                }) {
+                    Text("+")
+                        .font(.largeTitle)
+                        .frame(width: 60, height: 60)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(30)
                 }
-                .disabled(isTimerRunning)
             }
             .padding(.horizontal)
+            .padding(.bottom)
             
-            Text(timeString(from: timeRemaining))
-                .font(.system(size: 60, weight: .bold, design: .monospaced))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-            
-            Button(action: toggleTimer) {
-                Text(isTimerRunning ? "Stop" : "Start")
-                    .font(.title2)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(isTimerRunning ? Color.red : Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .padding(.horizontal)
-            
+            // Larger Lineups button
             NavigationLink(
-                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, 
-                                                   homeLineup: $homeLineup, homeBench: $homeBench,
-                                                   awayLineup: $awayLineup, awayBench: $awayBench)
+                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam,
+                                         homeLineup: $homeLineup, homeBench: $homeBench,
+                                         awayLineup: $awayLineup, awayBench: $awayBench)
             ) {
                 Text("Lineups")
-                    .font(.title2)
+                    .font(.title)
                     .padding()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 100)
                     .background(Color.gray.opacity(0.2))
-                    .foregroundColor(isTimerRunning ? .gray : .primary)
-                    .cornerRadius(10)
+                    .foregroundColor(.primary)
+                    .cornerRadius(15)
                     .padding(.horizontal)
             }
-            .disabled(isTimerRunning)
-            .onTapGesture {
-                if !isTimerRunning {
-                    showLineups = true
-                }
-            }
             
-            
-            Button(action: { showNewStat = true }) {
+            // Larger Stat button
+            NavigationLink(destination: MakeStatView()) {
                 Text("Stat")
-                    .font(.title2)
+                    .font(.title)
                     .padding()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 100)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(15)
             }
             .padding(.horizontal)
             
             Spacer()
             
+            // Finish Game button remains at the bottom
             Button(action: {
                 showingAlert = true
             }) {
                 Text("Finish Game")
-                    .font(.title2)
+                    .font(.title)
                     .padding()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 60)
                     .background(Color.red)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(15)
             }
             .padding()
             .alert(isPresented: $showingAlert) {
@@ -140,63 +141,30 @@ struct GameView: View {
                    secondaryButton: .cancel()
                 )
             }
-           .navigationDestination(isPresented: $navigateToFinishedGameStats) {
-               FinishedGameStatsView()
-           }
-        }
-        .onDisappear {
-            timer?.invalidate()
-        }
-//        .sheet(isPresented: $showLineups) {
-//            LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, homeLineup: $homeLineup, awayLineup: $awayLineup)
-//        }
-        .sheet(isPresented: $showNewStat) {
-            MakeStatView(teamName: homeTeam)
-        }
-        .navigationBarBackButtonHidden(true)
-    }
-    
-    
-    private func timeString(from timeInterval: TimeInterval) -> String {
-        let minutes = Int(timeInterval) / 60
-        let seconds = Int(timeInterval) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-    
-    private func toggleTimer() {
-        if isTimerRunning {
-            timer?.invalidate()
-            timer = nil
-        } else {
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if timeRemaining > 0 {
-                    timeRemaining -= 1
-                } else {
-                    timer?.invalidate()
-                    timer = nil
-                    isTimerRunning = false
-                }
+            .navigationDestination(isPresented: $navigateToFinishedGameStats) {
+                FinishedGameStatsView()
             }
         }
-        isTimerRunning.toggle()
-    }
-    
-    private func resetTimer() {
-        if !isTimerRunning {
-            timeRemaining = TimeInterval(quarterLength * 60)
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            Task {
+                await firebaseManager.createGameDocument(gameName: gameName)
+            }
+            homeBench = firebaseManager.getPlayersOf(teamName: homeTeam)
+            awayBench = firebaseManager.getPlayersOf(teamName: awayTeam)
         }
     }
+
 }
-
-
-
-
 
 
 struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            GameView(homeTeam: "Stanford", awayTeam: "USC", gameName: "Stanford 2024 vs. USC 2024 8/18/2024", quarterLength: 8)
+            GameView(homeTeam: "Stanford", awayTeam: "UCLA",
+                     gameName: "Stanford vs. UCLA 08-18-2024")
+            .environmentObject(FirebaseManager())
         }
     }
 }
+

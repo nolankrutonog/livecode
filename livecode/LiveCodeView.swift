@@ -8,19 +8,9 @@
 import SwiftUI
 import FirebaseCore
 
-class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication,
-                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    FirebaseApp.configure()
-
-    return true
-  }
-}
-
-
 struct LiveCodeView: View {
-    // DO NOT DELETE: for Firebase
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @EnvironmentObject var firebaseManager: FirebaseManager
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -61,11 +51,11 @@ struct LiveCodeView: View {
                 .padding()
                 .toolbar {
                     
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: EditRostersView()) {
-                            Image(systemName: "list.triangle")
-                        }
-                    }
+//                    ToolbarItem(placement: .navigationBarTrailing) {
+//                        NavigationLink(destination: EditRostersView()) {
+//                            Image(systemName: "list.triangle")
+//                        }
+//                    }
                 }
             }
         }
@@ -105,6 +95,13 @@ struct MenuButton: View {
     }
 }
 
-#Preview {
-    LiveCodeView()
+//#Preview {
+//    LiveCodeView()
+//}
+
+struct LiveCodeView_Preview: PreviewProvider {
+    static var previews: some View {
+        LiveCodeView()
+            .environmentObject(FirebaseManager())
+    }
 }

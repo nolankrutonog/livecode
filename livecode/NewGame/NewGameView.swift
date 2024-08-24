@@ -7,13 +7,13 @@
 import SwiftUI
 
 struct NewGameView: View {
+    @EnvironmentObject var firebaseManager: FirebaseManager
+    
     @State private var homeTeam: String = ""
     @State private var awayTeam: String = ""
     @State private var gameDate = Date()
-    @State private var rosters: [String] = []
     @State private var gameName: String = ""
     @State private var isGameNameEdited: Bool = false
-    @State private var quarterLength: Int = 8
     @State private var navigateToGame = false
     
     var generatedGameName: String {
@@ -28,64 +28,62 @@ struct NewGameView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                Section(header: Text("Game Details")) {
-                    Picker("Home Team", selection: $homeTeam) {
-                        Text("Select Home Team").tag("")
-                        ForEach(rosters, id: \.self) { roster in
-                            Text(roster).tag(roster)
+        if firebaseManager.rosters.isEmpty {
+            ProgressView("Loading rosters...")
+                .onAppear() {
+                    firebaseManager.fetchRosters()
+                }
+        } else {
+            VStack(spacing: 0) {
+                Form {
+                    Section(header: Text("Game Details")) {
+                        Picker("Home Team", selection: $homeTeam) {
+                            Text("Select Home Team").tag("")
+                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+                                Text(teamName).tag(teamName)
+                            }
                         }
+                        
+                        
+                        Picker("Away Team", selection: $awayTeam) {
+                            Text("Select Away Team").tag("")
+                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+                                Text(teamName).tag(teamName)
+                            }
+                        }
+                        
+                        DatePicker("Select Date", selection: $gameDate, displayedComponents: .date)
+                        
+                        TextField("Game Name", text: $gameName)
+                            .onChange(of: gameName) { _, _ in
+                                isGameNameEdited = true
+                            }
                     }
                     
-                    Picker("Away Team", selection: $awayTeam) {
-                        Text("Select Away Team").tag("")
-                        ForEach(rosters, id: \.self) { roster in
-                            Text(roster).tag(roster)
-                        }
-                    }
-                    
-                    DatePicker("Select Date", selection: $gameDate, displayedComponents: .date)
-                    
-                    TextField("Game Name", text: $gameName)
-                        .onChange(of: gameName) { _, _ in
-                            isGameNameEdited = true
-                        }
                 }
                 
-                Section(header: Text("Settings")) {
-                    Stepper(value: $quarterLength, in: 1...99) {
-                        Text("Quarter Length: \(quarterLength) min")
-                    }
+                NavigationLink(destination: GameView(homeTeam: homeTeam,
+                                                     awayTeam: awayTeam,
+                                                     gameName: gameName)
+                    .environmentObject(firebaseManager)
+                ) {
+                    
+                    Text("Start Game")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(isFormValid ? Color.blue : Color.gray)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
+                .disabled(!isFormValid)
+                .padding()
             }
+            .navigationTitle("New Game")
             
-            NavigationLink(destination: GameView(homeTeam: homeTeam,
-                                                 awayTeam: awayTeam,
-                                                 gameName: gameName,
-                                                 quarterLength: quarterLength)) {
-                Text("Start Game")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(isFormValid ? Color.blue : Color.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .disabled(!isFormValid)
-            .padding()
-        }
-        .navigationTitle("New Game")
-        
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear(perform: loadRosters)
-        .onChange(of: homeTeam) { _, _ in updateGameName() }
-        .onChange(of: awayTeam) { _, _ in updateGameName() }
-        .onChange(of: gameDate) { _, _ in updateGameName() }
-    }
-    
-    private func loadRosters() {
-        if let savedRosters = UserDefaults.standard.array(forKey: userDefaultsRostersKey) as? [String] {
-            rosters = savedRosters
+            .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: homeTeam) { _, _ in updateGameName() }
+            .onChange(of: awayTeam) { _, _ in updateGameName() }
+            .onChange(of: gameDate) { _, _ in updateGameName() }
         }
     }
     
@@ -94,12 +92,14 @@ struct NewGameView: View {
             gameName = generatedGameName
         }
     }
+    
 }
 
 struct NewGameView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             NewGameView()
+                .environmentObject(FirebaseManager())
         }
     }
 }
