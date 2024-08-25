@@ -14,7 +14,7 @@ struct GameView: View {
     let awayTeam: String
     let gameName: String
     
-    var game: Game
+//    var game: Game
     
     @State private var currentQuarter = 1
     @State private var showNewStat = false
@@ -27,6 +27,8 @@ struct GameView: View {
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
     
+    @State private var gameDocumentName = ""
+    
     // used to only call onAppear once (setting benches & creating firebase game)
     @State private var hasAppeared = false
     
@@ -34,7 +36,7 @@ struct GameView: View {
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
         self.gameName = gameName
-        self.game = Game(homeTeam: homeTeam, awayTeam: awayTeam, gameName: gameName, events: [])
+//        self.game = Game(homeTeam: homeTeam, awayTeam: awayTeam, gameName: gameName, events: [])
     }
     
     var body: some View {
@@ -90,7 +92,8 @@ struct GameView: View {
             
             // Larger Lineups button
             NavigationLink(
-                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam,
+                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, quarter: currentQuarter,
+                                         gameDocumentName: $gameDocumentName,
                                          homeInTheGame: $homeInTheGame, homeBench: $homeBench,
                                          awayInTheGame: $awayInTheGame, awayBench: $awayBench)
             ) {
@@ -149,9 +152,14 @@ struct GameView: View {
             if !hasAppeared {
                 hasAppeared = true // Set this to true so it only runs once
                 
+                // TODO: uncomment when finished creating stats
                 Task {
-                    // TODO: uncomment when doing stats
-                    // await firebaseManager.createGameDocument(gameName: gameName)
+                    do {
+                        gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
+                    } catch {
+                        print("Error creating game \(gameName)")
+                    }
+//                    gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
                 }
                 homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
                 awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
@@ -162,14 +170,14 @@ struct GameView: View {
 }
 
 
+
 struct GameView_Previews: PreviewProvider {
     @StateObject static var firebaseManager = FirebaseManager()
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameName: "Stanford vs. UCLA 08-18-2024")
+                     gameName: "Stanford vs. UCLA 08-24-2024")
             .environmentObject(firebaseManager)
         }
     }
 }
-

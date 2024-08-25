@@ -15,16 +15,19 @@ struct TeamLineupView: View {
     let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
     let buttonWidth: CGFloat = 120 // Fixed width for buttons
     let buttonHeight: CGFloat = 40 // Fixed height for buttons
-    let maxNameLength: Int = 12
+    let maxNameLength: Int = 15
 
     var body: some View {
         VStack {
-            Text("Goalie")
-                .font(.title)
-                .bold()
-            
             HStack {
-                if !inTheGame.goalies.isEmpty {
+                Text("Goalie")
+                    .font(.title)
+                    .bold()
+                Spacer()
+            }
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(inTheGame.goalies, id: \.self) { player in
                         Button(action: {
                             if let index = inTheGame.goalies.firstIndex(of: player) {
@@ -47,47 +50,51 @@ struct TeamLineupView: View {
                                 )
                         }
                     }
-                }
-                ForEach(bench.goalies, id: \.self) { player in
-                    Button(action: {
-                        if let index = bench.goalies.firstIndex(of: player) {
-                            bench.goalies.remove(at: index)
-                            if !inTheGame.goalies.isEmpty {
-                                let currentGoalie = inTheGame.goalies.removeFirst()
-                                bench.goalies.insert(currentGoalie, at: 0)
+                    ForEach(bench.goalies, id: \.self) { player in
+                        Button(action: {
+                            if let index = bench.goalies.firstIndex(of: player) {
+                                bench.goalies.remove(at: index)
+                                if !inTheGame.goalies.isEmpty {
+                                    let currentGoalie = inTheGame.goalies.removeFirst()
+                                    bench.goalies.insert(currentGoalie, at: 0)
+                                }
+                                inTheGame.goalies.append(player)
                             }
-                            inTheGame.goalies.append(player)
+                        }) {
+                            Text(abbreviateName(player))
+                                .font(.system(size: 12, weight: .medium))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .padding()
+                                .frame(width: buttonWidth, height: buttonHeight)
+                                .background(Color.gray.opacity(0.3)) // Lighter gray background
+                                .foregroundColor(.black) // Black text color
+                                .cornerRadius(20)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.white, lineWidth: 1)
+                                )
                         }
-                    }) {
-                        Text(abbreviateName(player))
-                            .font(.system(size: 12, weight: .medium))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .padding()
-                            .frame(width: buttonWidth, height: buttonHeight)
-                            .background(Color.gray.opacity(0.3)) // Lighter gray background
-                            .foregroundColor(.black) // Black text color
-                            .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
                     }
                 }
             }
+            .frame(height: calculateScrollViewHeight(for: inTheGame.goalies.count + bench.goalies.count))
             
-            Text("Field Players")
-                .font(.title)
-                .bold()
-                .padding(.top, 20)
+            HStack {
+                Text("Field Players")
+                    .font(.title)
+                    .bold()
+                    .padding(.top, 20)
+                Spacer()
+            }
             
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(inTheGame.fieldPlayers, id: \.self) { player in
+                    ForEach(inTheGame.field, id: \.self) { player in
                         Button(action: {
-                            if let index = inTheGame.fieldPlayers.firstIndex(of: player) {
-                                inTheGame.fieldPlayers.remove(at: index)
-                                bench.fieldPlayers.insert(player, at: 0)
+                            if let index = inTheGame.field.firstIndex(of: player) {
+                                inTheGame.field.remove(at: index)
+                                bench.field.insert(player, at: 0)
                             }
                         }) {
                             Text(abbreviateName(player))
@@ -105,12 +112,12 @@ struct TeamLineupView: View {
                                 )
                         }
                     }
-                    ForEach(bench.fieldPlayers, id: \.self) { player in
+                    ForEach(bench.field, id: \.self) { player in
                         Button(action: {
-                            if inTheGame.fieldPlayers.count < 6 {
-                                if let index = bench.fieldPlayers.firstIndex(of: player) {
-                                    bench.fieldPlayers.remove(at: index)
-                                    inTheGame.fieldPlayers.append(player)
+                            if inTheGame.field.count < 6 {
+                                if let index = bench.field.firstIndex(of: player) {
+                                    bench.field.remove(at: index)
+                                    inTheGame.field.append(player)
                                 }
                             }
                         }) {
@@ -160,6 +167,11 @@ struct TeamLineupView: View {
         
         return abbreviatedName
     }
+    
+    func calculateScrollViewHeight(for numberOfItems: Int) -> CGFloat {
+        let rows = (numberOfItems + 2) / 3 // Calculate number of rows needed
+        return CGFloat(rows) * (buttonHeight + 10) // Adjust height based on number of rows
+    }
 
 }
 
@@ -176,10 +188,11 @@ struct TeamLineupContainerView: View {
 struct TeamLineupsView_Previews: PreviewProvider {
     static var previews: some View {
         TeamLineupContainerView(
-            inTheGame: Lineup(goalies: [], fieldPlayers: ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6"]),
-            bench: Lineup(goalies: ["Konstantinos Mathiopoulos"], fieldPlayers: ["Player7", "Player8", "Player9", "Player10", "Player11"]),
+            inTheGame: Lineup(goalies: [], field: ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6"]),
+            bench: Lineup(goalies: ["Konstantinos Mathiopoulos"], field: ["Player7", "Player8", "Player9", "Player10", "Player11"]),
             teamName: "Stanford"
         )
+        .environmentObject(FirebaseManager())
     }
 }
 

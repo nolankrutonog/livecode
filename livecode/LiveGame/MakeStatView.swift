@@ -12,6 +12,6 @@ struct MakeStatView: View {
     
     var body: some View {
         
-        Text("Stats Page")
+        Text("Make Stats Page")
     }
 }

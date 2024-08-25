@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FirebaseCore
+//import FirebaseCore
 
 struct LiveCodeView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager

@@ -8,10 +8,22 @@
 
 import SwiftUI
 
+struct Lineup {
+    var goalies: [String] = []
+    var field: [String] = []
+}
+
+
 struct LineupsView: View {
+    @EnvironmentObject var firebaseManager: FirebaseManager
+
+    let maxQuarterTime = 8 // max quarter time in minutes
+    
     let homeTeam: String
     let awayTeam: String
-    
+    let quarter: Int
+   
+    @Binding var gameDocumentName: String
     @Binding var homeInTheGame: Lineup
     @Binding var homeBench: Lineup
     @Binding var awayInTheGame: Lineup
@@ -20,14 +32,17 @@ struct LineupsView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedTab: Int = 0
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
+    
+    @State private var showingDoneAlert = false
+    @State private var doneAlertMessage = ""
+    @State private var isTimePickerPresented = false
+    @State private var timeString: String = ""
 
     // Backup the original state
-    @State private var originalHomeInTheGame: Lineup = Lineup(goalies: [], fieldPlayers: [])
-    @State private var originalHomeBench: Lineup = Lineup(goalies: [], fieldPlayers: [])
-    @State private var originalAwayInTheGame: Lineup = Lineup(goalies: [], fieldPlayers: [])
-    @State private var originalAwayBench: Lineup = Lineup(goalies: [], fieldPlayers: [])
+    @State private var originalHomeInTheGame: Lineup = Lineup(goalies: [], field: [])
+    @State private var originalHomeBench: Lineup = Lineup(goalies: [], field: [])
+    @State private var originalAwayInTheGame: Lineup = Lineup(goalies: [], field: [])
+    @State private var originalAwayBench: Lineup = Lineup(goalies: [], field: [])
     
     var body: some View {
         VStack {
@@ -93,58 +108,71 @@ struct LineupsView: View {
             originalAwayInTheGame = awayInTheGame
             originalAwayBench = awayBench
         }
-        .alert(isPresented: $showingAlert) {
+        .alert(isPresented: $showingDoneAlert) {
             Alert(
-                title: Text("Are you sure you want to set the lineups?"),
-                message: Text(alertMessage),
+                title: Text("Are you sure you want to set lineups?"),
+                message: Text(doneAlertMessage),
                 primaryButton: .destructive(Text("Confirm")) {
-                    presentationMode.wrappedValue.dismiss()
+                    isTimePickerPresented = true
                 },
                 secondaryButton: .cancel()
             )
+        }
+        .sheet(isPresented: $isTimePickerPresented, onDismiss: {
+            Task {
+                do {
+                    try await firebaseManager.createLineupsStat(
+                        gameDocumentName: $gameDocumentName.wrappedValue,
+                        quarter: quarter,
+                        timeString: $timeString.wrappedValue,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        homeInTheGame: $homeInTheGame.wrappedValue,
+                        awayInTheGame: $awayInTheGame.wrappedValue
+                    )
+                } catch {
+                    print("Failed to create lineup stat \(error)")
+                }
+            }
+            // dismisses LineupsView
+            print("new timeString: \(timeString)")
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            TimePickerView(maxTime: maxQuarterTime, isPresented: $isTimePickerPresented, timeString: $timeString)
         }
     }
     
     private func checkLineupsBeforeDone() {
         var problems = [String]()
         
-        // Check Home Team
         if homeInTheGame.goalies.isEmpty {
             problems.append("\(homeTeam) doesn't have a goalie")
         }
-        if homeInTheGame.fieldPlayers.count != 6 {
-            problems.append("\(homeTeam) only has \(homeInTheGame.fieldPlayers.count) players in")
+        if homeInTheGame.field.count != 6 {
+            problems.append("\(homeTeam) only has \(homeInTheGame.field.count) players in")
         }
-        
-        // Check Away Team
         if awayInTheGame.goalies.isEmpty {
             problems.append("\(awayTeam) doesn't have a goalie")
         }
-        if awayInTheGame.fieldPlayers.count != 6 {
-            problems.append("\(awayTeam) only has \(awayInTheGame.fieldPlayers.count) players in")
+        if awayInTheGame.field.count != 6 {
+            problems.append("\(awayTeam) only has \(awayInTheGame.field.count) players in")
         }
         
         if problems.isEmpty {
-            // No problems, dismiss the view
-            presentationMode.wrappedValue.dismiss()
+            isTimePickerPresented = true
         } else {
-            // There are problems, show the alert
-            alertMessage = problems.joined(separator: "\n")
-            showingAlert = true
+            doneAlertMessage = problems.joined(separator: "\n")
+            showingDoneAlert = true
         }
-    }
-    
-    private func printLineups() {
-        print("Home Team (\(homeTeam)) - In The Game: \(homeInTheGame)")
-        print("Home Team (\(homeTeam)) - Bench: \(homeBench)")
-        print("Away Team (\(awayTeam)) - In The Game: \(awayInTheGame)")
-        print("Away Team (\(awayTeam)) - Bench: \(awayBench)")
-        print("\n\n\n\n")
     }
 }
 
+
+
 struct LineupsView_Previews: PreviewProvider {
     @StateObject static var firebaseManager = FirebaseManager()
+
+    @State static var gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
     @State static var homeInTheGame = stanfordInTheGame
     @State static var homeBench = stanfordBench
     @State static var awayInTheGame = uclaInTheGame
@@ -154,6 +182,8 @@ struct LineupsView_Previews: PreviewProvider {
         LineupsView(
             homeTeam: "Stanford",
             awayTeam: "UCLA",
+            quarter: 1,
+            gameDocumentName: $gameDocumentName,
             homeInTheGame: $homeInTheGame,
             homeBench: $homeBench,
             awayInTheGame: $awayInTheGame,

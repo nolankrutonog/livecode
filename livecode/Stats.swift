@@ -5,17 +5,38 @@
 //  Created by Nolan Krutonog on 8/18/24.
 //
 
-/* A GAME is a list of either Lineup, Shot, Exclusion, Steal, Timeout */
-struct Game {
-    var homeTeam: String
-    var awayTeam: String
-    var gameName: String
-    var events: [Any]
-    
-    mutating func addEvent(event: Any) {
-        self.events.append(event)
-    }
+/* A GAME is a list of either Lineup, Shot, Exclusion, Steal, Timeout, Turnover */
+//struct Game {
+//    var homeTeam: String
+//    var awayTeam: String
+////    var date: Date = Date()
+//    var events: [Any]
+//    
+//    mutating func addEvent(event: Any) {
+//        self.events.append(event)
+//    }
+//}
+
+struct StatKeys {
+    static let timeout = "timeout"
+    static let turnover = "turnover"
+    static let steal = "steal"
+    static let shot = "shot"
+    static let exclusion = "exclusion"
+    static let lineup = "lineup"
 }
+
+struct LineupKeys {
+    static let quarter = "quarter"
+    static let timeString = "time_string"
+    static let homeTeam = "home_team"
+    static let awayTeam = "away_team"
+    static let homeInTheGame = "home_in_the_game"
+    static let awayInTheGame = "away_in_the_game"
+    static let goalies = "goalies"
+    static let field = "field"
+}
+
 
 struct Timeout: Codable {
     var quarter: Int

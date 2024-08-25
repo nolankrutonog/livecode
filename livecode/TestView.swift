@@ -106,20 +106,20 @@ struct DragAndDropView_Previews: PreviewProvider {
 
 var stanfordInTheGame = Lineup(
     goalies: ["West Tempkin"],
-    fieldPlayers: ["Alex Gheorghe", "Ethan Parrish", "Riley Pittman", "CJ Indart", "Dash McFarland", "Chase McFarland"]
+    field: ["Alex Gheorghe", "Ethan Parrish", "Riley Pittman", "CJ Indart", "Dash McFarland", "Chase McFarland"]
 )
 
 var stanfordBench = Lineup(
     goalies: ["Griffen Price", "Harrison Rohlen"],
-    fieldPlayers: ["Grant Watson", "Jack Merrill", "Daniel Mnatsakanian", "Botond Balogh", "Gavin West", "Christopher Arakelian", "Soren Jensen", "Jackson Painter", "Max Zelikov", "Ryan Ohl", "Guido Leonardi", "Konstantinos Mathiopoulos", "Orestis Zervoudakis", "Tanner Pulice", "Will Schneider", "Ben Forer"]
+    field: ["Grant Watson", "Jack Merrill", "Daniel Mnatsakanian", "Botond Balogh", "Gavin West", "Christopher Arakelian", "Soren Jensen", "Jackson Painter", "Max Zelikov", "Ryan Ohl", "Guido Leonardi", "Konstantinos Mathiopoulos", "Orestis Zervoudakis", "Tanner Pulice", "Will Schneider", "Ben Forer"]
 )
 
 var uclaInTheGame = Lineup(
     goalies: ["Garret Griggs"],
-    fieldPlayers: ["Wade Sherlock", "Noah Rowe", "Jack Larsen", "Gray Carson", "Ben Larsen", "Marcell Szésci"]
+    field: ["Wade Sherlock", "Noah Rowe", "Jack Larsen", "Gray Carson", "Ben Larsen", "Marcell Szésci"]
 )
 
 var uclaBench = Lineup(
     goalies: [],
-    fieldPlayers: ["Frederico Jucá Carsalade", "Eli Liechty", "Ben Liechty", "Jack Hilinski", "Chase Dodd", "Grant Loth", "Makoto Kenney", "Trey Doten", "Vinnie Merk", "Bode Brinkema", "Peter Castillo", "Ryder Dodd", "Alex Heenan", "Joey Kent", "Max Matthews", "Andrew Spencer", "Nate Tauscher", "Nico Tierny", "Nick Tovani", "Harry Tucker", "Aaron Voggenthaler"]
+    field: ["Frederico Jucá Carsalade", "Eli Liechty", "Ben Liechty", "Jack Hilinski", "Chase Dodd", "Grant Loth", "Makoto Kenney", "Trey Doten", "Vinnie Merk", "Bode Brinkema", "Peter Castillo", "Ryder Dodd", "Alex Heenan", "Joey Kent", "Max Matthews", "Andrew Spencer", "Nate Tauscher", "Nico Tierny", "Nick Tovani", "Harry Tucker", "Aaron Voggenthaler"]
 )

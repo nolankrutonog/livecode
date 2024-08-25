@@ -18,12 +18,24 @@ struct NewGameView: View {
     
     // waits for firebaseManager to fetchRosters
     @State private var isLoading: Bool = true
+    @State private var errMsg: String?
     
+//    var generatedGameName: String {
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "MM-dd-yyyy"
+//        let dateString = dateFormatter.string(from: gameDate)
+//        return "\(homeTeam) vs. \(awayTeam) \(dateString)"
+//    }
     var generatedGameName: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM-dd-yyyy"
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withYear, .withMonth, .withDay, .withDashSeparatorInDate]
         let dateString = dateFormatter.string(from: gameDate)
-        return "\(homeTeam) vs. \(awayTeam) \(dateString)"
+        
+        // Replace spaces with underscores or hyphens and remove special characters
+        let sanitizedHomeTeam = homeTeam.replacingOccurrences(of: " ", with: "_").filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
+        let sanitizedAwayTeam = awayTeam.replacingOccurrences(of: " ", with: "_").filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
+        
+        return "\(sanitizedHomeTeam)_vs_\(sanitizedAwayTeam)_\(dateString)"
     }
     
     var isFormValid: Bool {
@@ -34,11 +46,16 @@ struct NewGameView: View {
         if isLoading {
             ProgressView("Loading rosters...")
                 .onAppear {
-                    Task {
-                        await firebaseManager.fetchRosters()
-                        isLoading = false
-                    }
+                    loadRosters()
                 }
+        } else if let errMsg = errMsg {
+            Text(errMsg)
+                .foregroundColor(.red)
+                .padding()
+            Button("Retry") {
+                loadRosters()
+            }
+            .padding()
         } else {
             VStack(spacing: 0) {
                 Form {
@@ -94,14 +111,33 @@ struct NewGameView: View {
             gameName = generatedGameName
         }
     }
+    
+    private func loadRosters() {
+        isLoading = true
+        errMsg = nil
+
+        Task {
+            do {
+                try await firebaseManager.fetchRosters()
+                isLoading = false
+            } catch let error as FirebaseError {
+                errMsg = error.localizedDescription
+                isLoading = false
+            } catch {
+                errMsg = "An unexpected error occurred."
+                isLoading = false
+            }
+        }
+    }
 }
 
 
 struct NewGameView_Preview: PreviewProvider {
+    @StateObject static var firebaseManager = FirebaseManager()
     static var previews: some View {
         NavigationStack {
             NewGameView()
-                .environmentObject(FirebaseManager())
+                .environmentObject(firebaseManager)
         }
     }
 }

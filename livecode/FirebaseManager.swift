@@ -8,75 +8,6 @@
 import Firebase
 
 
-struct Lineup {
-    var goalies: [String] = []
-    var fieldPlayers: [String] = []
-}
-
-//class FirebaseManager: ObservableObject {
-//    @Published var rosters: [String: Lineup] = [:]
-////    @Published var allRosters: [Int: [String: [String]]] = [:]
-//    let db = Firestore.firestore()
-//    private var isFetched: Bool = false
-//
-//    init() {
-//        fetchRosters()
-//    }
-//
-//    /* fetch the rosters from Firebase of the current year only if needed
-//        rosters in Firebase:
-//        * key: year: Int
-//        * value: ["teamName": ["field": [players], "goalies": [goalies]]]
-//     */
-//    func fetchRosters() {
-//        guard !isFetched else { return }
-//
-//        isFetched = true
-//
-//        db.collection("rosters").getDocuments() { (querySnapshot, error) in
-//            if let error = error {
-//                print("Error getting rosters: \(error)")
-//            } else {
-//                var fetchedAllRosters: [Int: [String: Lineup]] = [:]
-//                for document in querySnapshot!.documents {
-//                    if let year = Int(document.documentID) {
-//                        if let data = document.data() as? [String: [String: [String]]] {
-//                            var teamLineups: [String: Lineup] = [:]
-//                            for (teamName, players) in data {
-//                                let goalies = players["goalies"] ?? []
-//                                let fieldPlayers = players["field"] ?? []
-//                                teamLineups[teamName] = Lineup(goalies: goalies, fieldPlayers: fieldPlayers)
-//                            }
-//                            fetchedAllRosters[year] = teamLineups
-//                        }
-//                    }
-//                }
-//                DispatchQueue.main.async {
-//                    self.rosters = fetchedAllRosters[Calendar.current.component(.year, from: Date())] ?? [:]
-//                }
-//            }
-//        }
-//    }
-//
-//    /* returns the players of teamName */
-//    func getFullLineupOf(teamName: String) -> Lineup {
-//        if !isFetched {
-//            fetchRosters()
-//        }
-//        return rosters[teamName] ?? Lineup()
-//    }
-//
-//    func createGameDocument(gameName: String) async {
-//        let newGameName = gameName + " " + String(Int(Date().timeIntervalSince1970))
-//        do {
-//            try await db.collection("games")
-//                .document(newGameName).setData([:])
-//        } catch {
-//            print("Error creating game: \(gameName)")
-//        }
-//    }
-//}
-
 class FirebaseManager: ObservableObject {
     @Published var rosters: [String: Lineup] = [:]
     let db = Firestore.firestore()
@@ -84,11 +15,15 @@ class FirebaseManager: ObservableObject {
     
     init() {
         Task {
-            await fetchRosters()
+            do {
+                try await fetchRosters()
+            } catch {
+                print("Error fetching rosters: \(error.localizedDescription)")
+            }
         }
     }
 
-    func fetchRosters() async {
+    func fetchRosters() async throws {
         guard !isFetched else { return }
         isFetched = true
         
@@ -102,7 +37,7 @@ class FirebaseManager: ObservableObject {
                         for (teamName, players) in data {
                             let goalies = players["goalies"] ?? []
                             let fieldPlayers = players["field"] ?? []
-                            teamLineups[teamName] = Lineup(goalies: goalies, fieldPlayers: fieldPlayers)
+                            teamLineups[teamName] = Lineup(goalies: goalies, field: fieldPlayers)
                         }
                         fetchedAllRosters[year] = teamLineups
                     }
@@ -113,20 +48,80 @@ class FirebaseManager: ObservableObject {
             }
         } catch {
             print("Error getting rosters: \(error.localizedDescription)")
+            throw FirebaseError.fetchRostersFailed
         }
     }
     
+    /* returns a Lineup() given the teamName */
     func getFullLineupOf(teamName: String) -> Lineup {
         return rosters[teamName] ?? Lineup()
     }
     
-    func createGameDocument(gameName: String) async {
-        let newGameName = gameName + " " + String(Int(Date().timeIntervalSince1970))
+    /* Creates a game document in Fireabse */
+    func createGameDocument(gameName: String) async throws -> String {
+        let newGameName = gameName + "_" + String(Int(Date().timeIntervalSince1970))
         do {
             try await db.collection("games")
                 .document(newGameName).setData([:])
         } catch {
             print("Error creating game: \(gameName)")
+            throw FirebaseError.gameCreationFailed(gameName: gameName)
+        }
+        print(newGameName)
+        return newGameName
+    }
+    
+    func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
+                          homeTeam: String, awayTeam: String,
+                           homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
+        print("in create lineups")
+        let lineupData: [String: Any] = [
+            LineupKeys.quarter: quarter,
+            LineupKeys.timeString: timeString,
+            LineupKeys.homeTeam: homeTeam,
+            LineupKeys.awayTeam: awayTeam,
+            LineupKeys.homeInTheGame: [
+                LineupKeys.goalies: homeInTheGame.goalies,
+                LineupKeys.field: homeInTheGame.field
+            ],
+            LineupKeys.awayInTheGame: [
+                LineupKeys.goalies: awayInTheGame.goalies,
+                LineupKeys.field: awayInTheGame.field
+            ]
+        ]
+        
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .updateData([
+                    StatKeys.lineup : FieldValue.arrayUnion([lineupData])
+                ])
+        } catch {
+//            print("Error uploading lineup stat to game: \(gameDocumentName)")
+            throw FirebaseError.lineupStatCreationFailed(gameDocumentName: gameDocumentName)
+        }
+        print("leaving create lineups")
+    }
+    
+}
+
+
+enum FirebaseError: Error, LocalizedError {
+    case fetchRostersFailed
+    case gameCreationFailed(gameName: String)
+    case lineupStatCreationFailed(gameDocumentName: String)
+    case networkError
+    
+    var errorDescription: String? {
+        switch self {
+        case .fetchRostersFailed:
+            return "Failed to fetch the rosters"
+        case .gameCreationFailed(let gameName):
+            return "Failed to start game \(gameName)"
+        case .lineupStatCreationFailed(let gameDocumentName):
+            return "Failed to upload lineup stat to game \(gameDocumentName)"
+        case .networkError:
+            return "Network error occurred. Please check your internet connection"
         }
     }
 }
