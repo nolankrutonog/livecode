@@ -39,7 +39,7 @@ struct SelectStatView: View {
                         StatButton(label: "Turnover", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "hand.thumbsdown.fill")
                     }
                     
-                    NavigationLink(destination: ExclusionView()) {
+                    NavigationLink(destination: ExclusionView(gameDocumentName: gameDocumentName, quarter: quarter, homeTeam: homeTeam, awayTeam: awayTeam, homeInTheGame: homeInTheGame, awayInTheGame: awayInTheGame)) {
                         StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
                     }
 
@@ -134,11 +134,6 @@ struct StealView: View {
     }
 }
 
-struct ExclusionView: View {
-    var body: some View {
-        Text("Exclusion View")
-    }
-}
 
 struct ShotView: View {
     var body: some View {

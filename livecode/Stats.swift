@@ -5,19 +5,11 @@
 //  Created by Nolan Krutonog on 8/18/24.
 //
 
-/* A GAME is a list of either Lineup, Shot, Exclusion, Steal, Timeout, Turnover */
-//struct Game {
-//    var homeTeam: String
-//    var awayTeam: String
-////    var date: Date = Date()
-//    var events: [Any]
-//    
-//    mutating func addEvent(event: Any) {
-//        self.events.append(event)
-//    }
-//}
 
-struct StatKeys {
+let statType: String = "stat_type"
+
+/* A GAME is a list of either Lineup, Shot, Exclusion, Steal, Timeout, Turnover */
+struct StatType {
     static let timeout = "timeout"
     static let turnover = "turnover"
     static let steal = "steal"
@@ -27,8 +19,6 @@ struct StatKeys {
 }
 
 struct LineupKeys {
-    static let quarter = "quarter"
-    static let timeString = "time_string"
     static let homeTeam = "home_team"
     static let awayTeam = "away_team"
     static let homeInTheGame = "home_in_the_game"
@@ -38,11 +28,15 @@ struct LineupKeys {
 }
 
 struct TurnoverKeys {
-    static let quarter = "quarter"
-    static let timeString = "time_string"
     static let team = "team"
     static let player = "player"
 }
+
+struct ExclusionKeys {
+    static let team = "team"
+    static let player = "player"
+}
+
 
 
 
