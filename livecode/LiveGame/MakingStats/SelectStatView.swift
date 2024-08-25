@@ -43,7 +43,14 @@ struct SelectStatView: View {
                         StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
                     }
 
-                    NavigationLink(destination: StealView()) {
+                    NavigationLink(destination: StealView(
+                        gameDocumentName: gameDocumentName,
+                        quarter: quarter,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        homeInTheGame: homeInTheGame,
+                        awayInTheGame: awayInTheGame
+                    )) {
                         StatButton(label: "Steal", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "volleyball.fill")
                     }
                     
@@ -128,11 +135,6 @@ struct TimeoutView: View {
     }
 }
 
-struct StealView: View {
-    var body: some View {
-        Text("Steal View")
-    }
-}
 
 
 struct ShotView: View {

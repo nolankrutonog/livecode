@@ -139,12 +139,21 @@ class FirebaseManager: ObservableObject {
         }
     }
     /* Creates exclusion stat in firebase */
-    func createExclusionStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String) async throws {
+    func createExclusionStat(gameDocumentName: String, quarter: Int, timeString: String,
+                             excludedTeam: String,
+                             excludedPlayer: String,
+                             phaseOfGame: String,
+                             exclusionType: String,
+                             drawnBy: String
+    ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let exclusionData: [String: Any] = [
             statType: StatType.exclusion,
-            ExclusionKeys.team: team,
-            ExclusionKeys.player: player
+            ExclusionKeys.excludedTeam: excludedTeam,
+            ExclusionKeys.excludedPlayer: excludedPlayer,
+            ExclusionKeys.phaseOfGame: phaseOfGame,
+            ExclusionKeys.exclusionType: exclusionType,
+            ExclusionKeys.drawnBy: drawnBy
         ]
         
         do {
@@ -153,6 +162,28 @@ class FirebaseManager: ObservableObject {
                 .setData(["\(timeElapsed)": exclusionData], merge: true)
         } catch {
             throw FirebaseError.turnoverStatCreationFailed(gameDocumentName: gameDocumentName)
+        }
+    }
+    
+    func createStealStat(gameDocumentName: String, quarter: Int,
+                         timeString: String, selectedTeam: String,
+                         stolenBy: String, turnoverBy: String
+    ) async throws {
+        let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
+        let stealData: [String: Any] = [
+            statType: StatType.steal,
+            StealKeys.team: selectedTeam,
+            StealKeys.stolenBy: stolenBy,
+            StealKeys.turnoverBy: turnoverBy
+        ]
+        
+
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .setData(["\(timeElapsed)": stealData], merge: true)
+        } catch {
+            throw FirebaseError.stealStatCreationFailed(gameDocumentName: gameDocumentName)
         }
     }
 
@@ -165,6 +196,7 @@ enum FirebaseError: Error, LocalizedError {
     case lineupStatCreationFailed(gameDocumentName: String)
     case turnoverStatCreationFailed(gameDocumentName: String)
     case exclusionStatCreationFailed(gameDocumentName: String)
+    case stealStatCreationFailed(gameDocumentName: String)
     case networkError
     
     var errorDescription: String? {
@@ -179,6 +211,8 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to upload turnover stat to game \(gameDocumentName)"
         case .exclusionStatCreationFailed(let gameDocumentName):
             return "Failed to upload exclusion stat to game \(gameDocumentName)"
+        case .stealStatCreationFailed(let gameDocumentName):
+            return "Failed to upload steal stat to game \(gameDocumentName)"
         case .networkError:
             return "Network error occurred. Please check your internet connection"
         }

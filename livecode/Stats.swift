@@ -18,6 +18,12 @@ struct StatType {
     static let lineup = "lineup"
 }
 
+struct StealKeys {
+    static let team = "team"
+    static let stolenBy = "stolen_by"
+    static let turnoverBy = "turnover_by"
+}
+
 struct LineupKeys {
     static let homeTeam = "home_team"
     static let awayTeam = "away_team"
@@ -33,9 +39,54 @@ struct TurnoverKeys {
 }
 
 struct ExclusionKeys {
-    static let team = "team"
-    static let player = "player"
+    static let excludedTeam = "excluded_team"
+    static let excludedPlayer = "excluded_player"
+    static let phaseOfGame = "phase_of_game"
+    static let exclusionType = "exclusion_type"
+    static let drawnBy = "drawn_by"
+    
+    static let exclusionTypes = [
+        "On ball center",
+        "On ball",
+        "Off ball"
+    ]
+    
+    static let onBall = "on_ball"
+    static let offBall = "off_ball"
+    static let onBallCenter = "on_ball_center"
 }
+
+struct PhaseOfGameKeys {
+    static let sixOnFive = "6v5"
+    static let frontCourtOffense = "front_court_offense"
+    static let transitionOffense = "transition_offense"
+    static let fiveOnSix = "5v6"
+    static let frontCourtDefense = "front_court_defense"
+    static let transitionDefense = "transition_defense"
+    
+    static let allPhases = [
+        "6v5",
+        "Front court offense",
+        "Transition offense",
+        "5v6",
+        "Front court defense",
+        "Transition defense"
+    ]
+    
+    static let defensePhases = [
+        "Front court defense",
+        "Transition defense",
+        "5v6"
+    ]
+    
+    static let offensePhases = [
+        "6v5",
+        "Front court offense",
+        "Transition offense"
+    ]
+}
+
+
 
 
 
