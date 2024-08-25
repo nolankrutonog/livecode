@@ -123,3 +123,13 @@ var uclaBench = Lineup(
     goalies: [],
     field: ["Frederico Jucá Carsalade", "Eli Liechty", "Ben Liechty", "Jack Hilinski", "Chase Dodd", "Grant Loth", "Makoto Kenney", "Trey Doten", "Vinnie Merk", "Bode Brinkema", "Peter Castillo", "Ryder Dodd", "Alex Heenan", "Joey Kent", "Max Matthews", "Andrew Spencer", "Nate Tauscher", "Nico Tierny", "Nick Tovani", "Harry Tucker", "Aaron Voggenthaler"]
 )
+
+var stanfordFullRoster = Lineup(
+    goalies: ["Griffen Price", "Harrison Rohlen", "West Tempkin"],
+    field: ["Alex Gheorghe", "Ethan Parrish", "Riley Pittman", "CJ Indart", "Dash McFarland", "Chase McFarland", "Grant Watson", "Jack Merrill", "Daniel Mnatsakanian", "Botond Balogh", "Gavin West", "Christopher Arakelian", "Soren Jensen", "Jackson Painter", "Max Zelikov", "Ryan Ohl", "Guido Leonardi", "Konstantinos Mathiopoulos", "Orestis Zervoudakis", "Tanner Pulice", "Will Schneider", "Ben Forer"]
+)
+
+var uclaFullRoster = Lineup(
+    goalies: ["Garret Griggs"],
+    field: ["Frederico Jucá Carsalade", "Eli Liechty", "Ben Liechty", "Jack Hilinski", "Chase Dodd", "Grant Loth", "Makoto Kenney", "Trey Doten", "Vinnie Merk", "Bode Brinkema", "Peter Castillo", "Ryder Dodd", "Alex Heenan", "Joey Kent", "Max Matthews", "Andrew Spencer", "Nate Tauscher", "Nico Tierny", "Nick Tovani", "Harry Tucker", "Aaron Voggenthaler", "Wade Sherlock", "Noah Rowe", "Jack Larsen", "Gray Carson", "Ben Larsen", "Marcell Szésci"]
+)

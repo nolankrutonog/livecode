@@ -118,6 +118,28 @@ struct LineupsView: View {
                 secondaryButton: .cancel()
             )
         }
+//        .sheet(isPresented: $isTimePickerPresented) {
+//            TimePickerView(maxTime: maxQuarterTime, timeString: $timeString, onSubmit: {
+//                Task {
+//                    do {
+//                        try await firebaseManager.createLineupsStat(
+//                            gameDocumentName: $gameDocumentName.wrappedValue,
+//                            quarter: quarter,
+//                            timeString: $timeString.wrappedValue,
+//                            homeTeam: homeTeam,
+//                            awayTeam: awayTeam,
+//                            homeInTheGame: $homeInTheGame.wrappedValue,
+//                            awayInTheGame: $awayInTheGame.wrappedValue
+//                        )
+//                    } catch {
+//                        print("Failed to create lineup stat \(error)")
+//                    }
+//                }
+//
+//            }, onCancel: {
+//                self.isTimePickerPresented = false
+//            })
+//        }
         .sheet(isPresented: $isTimePickerPresented, onDismiss: {
             Task {
                 do {
@@ -135,7 +157,7 @@ struct LineupsView: View {
                 }
             }
             // dismisses LineupsView
-            print("new timeString: \(timeString)")
+//            print("new timeString: \(timeString)")
             presentationMode.wrappedValue.dismiss()
         }) {
             TimePickerView(maxTime: maxQuarterTime, isPresented: $isTimePickerPresented, timeString: $timeString)

@@ -108,7 +108,13 @@ struct GameView: View {
             }
             
             // Larger Stat button
-            NavigationLink(destination: MakeStatView()) {
+            NavigationLink(destination: SelectStatView(
+                quarter: currentQuarter,
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                homeInTheGame: homeInTheGame,
+                awayInTheGame: awayInTheGame
+            )) {
                 Text("Stat")
                     .font(.title)
                     .padding()
@@ -152,17 +158,23 @@ struct GameView: View {
             if !hasAppeared {
                 hasAppeared = true // Set this to true so it only runs once
                 
-                // TODO: uncomment when finished creating stats
-                Task {
-                    do {
-                        gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
-                    } catch {
-                        print("Error creating game \(gameName)")
-                    }
-//                    gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
-                }
-                homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
-                awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
+//                TODO: uncomment when finished creating stats
+//                Task {
+//                    do {
+//                        gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
+//                    } catch {
+//                        print("Error creating game \(gameName)")
+//                    }
+//                }
+//                homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
+//                awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
+                
+                // TODO: for testing purposes, comment when actually running the app
+                gameDocumentName = "Stanford_vs_UCLA_2024-08-25_1724557371"
+                homeBench = stanfordBench
+                awayBench = uclaBench
+                homeInTheGame = stanfordInTheGame
+                awayInTheGame = uclaInTheGame
             }
         }
     }
@@ -176,7 +188,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameName: "Stanford vs. UCLA 08-24-2024")
+                     gameName: "Stanford_vs_UCLA_2024-08-25_1724557371")
             .environmentObject(firebaseManager)
         }
     }
