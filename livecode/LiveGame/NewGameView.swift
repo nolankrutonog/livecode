@@ -20,12 +20,6 @@ struct NewGameView: View {
     @State private var isLoading: Bool = true
     @State private var errMsg: String?
     
-//    var generatedGameName: String {
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateFormat = "MM-dd-yyyy"
-//        let dateString = dateFormatter.string(from: gameDate)
-//        return "\(homeTeam) vs. \(awayTeam) \(dateString)"
-//    }
     var generatedGameName: String {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withYear, .withMonth, .withDay, .withDashSeparatorInDate]

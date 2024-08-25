@@ -10,13 +10,15 @@ import SwiftUI
 struct SelectStatView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     
+    let gameDocumentName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
     let homeInTheGame: Lineup
     let awayInTheGame: Lineup
    
-    init(quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameDocumentName = gameDocumentName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -26,29 +28,35 @@ struct SelectStatView: View {
     
     var body: some View {
         VStack {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                NavigationLink(destination: TurnoverView(quarter: quarter, homeTeam: homeTeam, awayTeam: awayTeam, homeInTheGame: homeInTheGame, awayInTheGame: awayInTheGame)) {
-                    StatButton(label: "Turnover", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "hand.thumbsdown.fill")
+//            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    NavigationLink(destination: ShotView()) {
+                        StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
+                    }
+                    
+                    NavigationLink(destination: TurnoverView(gameDocumentName: gameDocumentName, quarter: quarter, homeTeam: homeTeam, awayTeam: awayTeam, homeInTheGame: homeInTheGame, awayInTheGame: awayInTheGame)) {
+                        StatButton(label: "Turnover", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "hand.thumbsdown.fill")
+                    }
+                    
+                    NavigationLink(destination: ExclusionView()) {
+                        StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
+                    }
+
+                    NavigationLink(destination: StealView()) {
+                        StatButton(label: "Steal", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "volleyball.fill")
+                    }
+                    
+                    NavigationLink(destination: TimeoutView()) {
+                        StatButton(label: "Timeout", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "timer")
+                    }
+                    
+
                 }
+                .padding()
                 
-                NavigationLink(destination: TimeoutView()) {
-                    StatButton(label: "Timeout", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "timer")
-                }
-                
-                NavigationLink(destination: StealView()) {
-                    StatButton(label: "Steal", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "volleyball.fill")
-                }
-                
-                NavigationLink(destination: ExclusionView()) {
-                    StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
-                }
-                
-                NavigationLink(destination: ShotView()) {
-                    StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
-                }
+
             }
-            .padding()
-            
             Spacer()
         }
     }
@@ -92,7 +100,7 @@ struct StatButton: View {
                     Image(systemName: iconName) // Replace with your actual icon
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 50, height: 30)
                         .foregroundColor(.white.opacity(0.7))
                         .padding([.top, .trailing], 10)
                 }
@@ -100,7 +108,7 @@ struct StatButton: View {
                 // Label at the bottom left
                 HStack {
                     Text(label)
-                        .font(.title2)
+                        .font(.title)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                         .padding([.leading, .bottom], 10)
@@ -108,7 +116,7 @@ struct StatButton: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 150)
+        .frame(maxWidth: .infinity, minHeight: 60)
         .navigationTitle("Stat")
     }
 }
@@ -142,11 +150,13 @@ struct ShotView: View {
 struct SelectStatView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            SelectStatView(quarter: 1,
-                           homeTeam: "Stanford",
-                           awayTeam: "UCLA",
-                           homeInTheGame: stanfordInTheGame,
-                           awayInTheGame: uclaInTheGame
+            SelectStatView(
+                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+                quarter: 1,
+                homeTeam: "Stanford",
+                awayTeam: "UCLA",
+                homeInTheGame: stanfordInTheGame,
+                awayInTheGame: uclaInTheGame
             )
             .environmentObject(FirebaseManager())
         }

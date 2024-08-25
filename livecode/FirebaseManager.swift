@@ -71,10 +71,10 @@ class FirebaseManager: ObservableObject {
         return newGameName
     }
     
+    /* creates a lineup stat in the given gameDocumentName */
     func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
                           homeTeam: String, awayTeam: String,
                            homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
-        print("in create lineups")
         let lineupData: [String: Any] = [
             LineupKeys.quarter: quarter,
             LineupKeys.timeString: timeString,
@@ -97,10 +97,27 @@ class FirebaseManager: ObservableObject {
                     StatKeys.lineup : FieldValue.arrayUnion([lineupData])
                 ])
         } catch {
-//            print("Error uploading lineup stat to game: \(gameDocumentName)")
             throw FirebaseError.lineupStatCreationFailed(gameDocumentName: gameDocumentName)
         }
-        print("leaving create lineups")
+    }
+    
+    func createTurnoverStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String) async throws {
+        let turnoverData: [String: Any] = [
+            TurnoverKeys.quarter: quarter,
+            TurnoverKeys.timeString: timeString,
+            TurnoverKeys.team: team,
+            TurnoverKeys.player: player
+        ]
+        
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .updateData([
+                    StatKeys.turnover: FieldValue.arrayUnion([turnoverData])
+                ])
+        } catch {
+            throw FirebaseError.turnoverStatCreationFailed(gameDocumentName: gameDocumentName)
+        }
     }
     
 }
@@ -110,6 +127,7 @@ enum FirebaseError: Error, LocalizedError {
     case fetchRostersFailed
     case gameCreationFailed(gameName: String)
     case lineupStatCreationFailed(gameDocumentName: String)
+    case turnoverStatCreationFailed(gameDocumentName: String)
     case networkError
     
     var errorDescription: String? {
@@ -120,6 +138,8 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to start game \(gameName)"
         case .lineupStatCreationFailed(let gameDocumentName):
             return "Failed to upload lineup stat to game \(gameDocumentName)"
+        case .turnoverStatCreationFailed(let gameDocumentName):
+            return "Failed to upload turnover stat to game \(gameDocumentName)"
         case .networkError:
             return "Network error occurred. Please check your internet connection"
         }

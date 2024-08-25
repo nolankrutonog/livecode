@@ -9,6 +9,8 @@ import SwiftUI
 struct TurnoverView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var firebaseManager: FirebaseManager
+    
+    let gameDocumentName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -21,7 +23,8 @@ struct TurnoverView: View {
     @State private var showingAlert = false
     @State private var isTimePickerPresented = false
     
-    init(quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameDocumentName = gameDocumentName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -45,22 +48,35 @@ struct TurnoverView: View {
         .alert(isPresented: $showingAlert) {
             confirmBackAlert
         }
-//        .sheet(isPresented: $isTimePickerPresented) {
-//            TimePickerView(
-//                maxTime: 8,
-//                timeString: $timeString,
-//                onSubmit: {
-//                    // Handle the time selected and navigate back to GameView
-////                    navigateBackToGameView()
-//                    presentationMode.wrappedValue.dismiss()
-//                    presentationMode.wrappedValue.dismiss()
-//                },
-//                onCancel: {
-//                    // Simply dismiss the TimePickerView and stay in TurnoverView
-//                    self.isTimePickerPresented = false
-//                }
-//            )
-//        }
+        .sheet(isPresented: $isTimePickerPresented) {
+            TimePickerView(
+                maxTime: 8,
+                timeString: $timeString,
+                onSubmit: {
+                    Task {
+                        do {
+                            try await firebaseManager.createTurnoverStat(
+                                gameDocumentName: gameDocumentName,
+                                quarter: quarter, 
+                                timeString: timeString,
+                                team: selectedTeam,
+                                player: selectedPlayer
+                            )
+                        } catch {
+                           print("Failed to create turnover stat: \(error)")
+                        }
+                    }
+                    presentationMode.wrappedValue.dismiss()
+                    presentationMode.wrappedValue.dismiss()
+                    print(timeString)
+                },
+                onCancel: {
+                    // Simply dismiss the TimePickerView and stay in TurnoverView
+                    self.isTimePickerPresented = false
+                }
+            )
+        }
+        
     }
     
     // MARK: - Components
@@ -76,6 +92,7 @@ struct TurnoverView: View {
             .padding(.vertical, 10)  // Increase the vertical padding
         }
     }
+    
     
     private var playerSelectionSection: some View {
         Section(header: Text("Select Player")) {
@@ -142,7 +159,9 @@ struct TurnoverView_Preview: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            TurnoverView(quarter: 1,
+            TurnoverView(
+                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+                quarter: 1,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA",
                 homeInTheGame: stanfordInTheGame,

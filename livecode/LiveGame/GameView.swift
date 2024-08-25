@@ -109,6 +109,7 @@ struct GameView: View {
             
             // Larger Stat button
             NavigationLink(destination: SelectStatView(
+                gameDocumentName: gameDocumentName,
                 quarter: currentQuarter,
                 homeTeam: homeTeam,
                 awayTeam: awayTeam,

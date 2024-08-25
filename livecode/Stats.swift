@@ -37,6 +37,12 @@ struct LineupKeys {
     static let field = "field"
 }
 
+struct TurnoverKeys {
+    static let quarter = "quarter"
+    static let timeString = "time_string"
+    static let team = "team"
+    static let player = "player"
+}
 
 
 
