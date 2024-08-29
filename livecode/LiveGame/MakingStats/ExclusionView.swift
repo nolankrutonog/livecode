@@ -23,7 +23,6 @@ struct ExclusionView: View {
     let awayInTheGame: Lineup
     
     @State private var timeString: String = ""
-//    @State private var showingAlert = false
     @State private var isTimePickerPresented = false
     
     @State private var excludedTeam: String = ""
@@ -45,10 +44,6 @@ struct ExclusionView: View {
     
     var body: some View {
         Form {
-//            teamSelectionSection
-//            phaseOfGameSelectionSection
-//            playerSelectionSection
-//            exclusionDetailsSection
             Section(header: Text("Exclusion Details")) {
                 Picker("Team", selection: $excludedTeam) {
                     Text(homeTeam).tag(homeTeam)
@@ -108,7 +103,7 @@ struct ExclusionView: View {
 //        }
         .sheet(isPresented: $isTimePickerPresented) {
             TimePickerView(
-                maxTime: 8,
+                maxTime: maxQuarterMinutes,
                 timeString: $timeString,
                 onSubmit: {
                     Task {
@@ -129,7 +124,6 @@ struct ExclusionView: View {
                     }
                     presentationMode.wrappedValue.dismiss()
                     presentationMode.wrappedValue.dismiss()
-                    print(timeString)
                 },
                 onCancel: {
                     // Simply dismiss the TimePickerView and stay in ExclusionView
@@ -138,18 +132,6 @@ struct ExclusionView: View {
             )
         }
     }
-//    private var confirmBackAlert: Alert {
-//        Alert(
-//            title: Text("Are you sure you want to go back?"),
-//            message: Text("Your selections will be lost."),
-//            primaryButton: .destructive(Text("Go Back")) {
-//                presentationMode.wrappedValue.dismiss()
-//            },
-//            secondaryButton: .cancel()
-//        )
-//    }
-    
-    
 }
 
 struct ExclusionView_Preview: PreviewProvider {

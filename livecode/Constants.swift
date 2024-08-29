@@ -19,3 +19,5 @@ let userDefaultsRostersKey = "rostersKey"
  is the key for userDefaults
  */
 
+let maxQuarterMinutes = 8
+

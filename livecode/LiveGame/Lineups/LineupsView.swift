@@ -17,13 +17,12 @@ struct Lineup {
 struct LineupsView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
 
-    let maxQuarterTime = 8 // max quarter time in minutes
     
     let homeTeam: String
     let awayTeam: String
     let quarter: Int
-   
-    @Binding var gameDocumentName: String
+    let gameDocumentName: String
+    
     @Binding var homeInTheGame: Lineup
     @Binding var homeBench: Lineup
     @Binding var awayInTheGame: Lineup
@@ -119,11 +118,11 @@ struct LineupsView: View {
             )
         }
         .sheet(isPresented: $isTimePickerPresented) {
-            TimePickerView(maxTime: maxQuarterTime, timeString: $timeString, onSubmit: {
+            TimePickerView(maxTime: maxQuarterMinutes, timeString: $timeString, onSubmit: {
                 Task {
                     do {
                         try await firebaseManager.createLineupsStat(
-                            gameDocumentName: $gameDocumentName.wrappedValue,
+                            gameDocumentName: gameDocumentName,
                             quarter: quarter,
                             timeString: $timeString.wrappedValue,
                             homeTeam: homeTeam,
@@ -141,28 +140,6 @@ struct LineupsView: View {
                 self.isTimePickerPresented = false
             })
         }
-//        .sheet(isPresented: $isTimePickerPresented, onDismiss: {
-//            Task {
-//                do {
-//                    try await firebaseManager.createLineupsStat(
-//                        gameDocumentName: $gameDocumentName.wrappedValue,
-//                        quarter: quarter,
-//                        timeString: $timeString.wrappedValue,
-//                        homeTeam: homeTeam,
-//                        awayTeam: awayTeam,
-//                        homeInTheGame: $homeInTheGame.wrappedValue,
-//                        awayInTheGame: $awayInTheGame.wrappedValue
-//                    )
-//                } catch {
-//                    print("Failed to create lineup stat \(error)")
-//                }
-//            }
-//            // dismisses LineupsView
-////            print("new timeString: \(timeString)")
-//            presentationMode.wrappedValue.dismiss()
-//        }) {
-//            TimePickerView(maxTime: maxQuarterTime, isPresented: $isTimePickerPresented, timeString: $timeString)
-//        }
     }
     
     private func checkLineupsBeforeDone() {
@@ -195,7 +172,7 @@ struct LineupsView: View {
 struct LineupsView_Previews: PreviewProvider {
     @StateObject static var firebaseManager = FirebaseManager()
 
-    @State static var gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
+//    let gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
     @State static var homeInTheGame = stanfordInTheGame
     @State static var homeBench = stanfordBench
     @State static var awayInTheGame = uclaInTheGame
@@ -206,7 +183,7 @@ struct LineupsView_Previews: PreviewProvider {
             homeTeam: "Stanford",
             awayTeam: "UCLA",
             quarter: 1,
-            gameDocumentName: $gameDocumentName,
+            gameDocumentName: "Stanford_vs_UCLA_2024-08-28_1724874036",
             homeInTheGame: $homeInTheGame,
             homeBench: $homeBench,
             awayInTheGame: $awayInTheGame,

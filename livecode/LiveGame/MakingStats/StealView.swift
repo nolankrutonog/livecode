@@ -35,8 +35,8 @@ struct StealView: View {
         self.homeInTheGame = homeInTheGame
         self.awayInTheGame = awayInTheGame
         _selectedTeam = State(initialValue: homeTeam)
-        _stolenBy = State(initialValue: homeInTheGame.field.first!)
-        _turnoverBy = State(initialValue: awayInTheGame.field.first!)
+        _stolenBy = State(initialValue: homeInTheGame.field.first ?? "no_player")
+        _turnoverBy = State(initialValue: awayInTheGame.field.first ?? "no_player")
     }
     
     var body: some View {
@@ -89,7 +89,7 @@ struct StealView: View {
         .navigationBarBackButtonHidden(true)
         .sheet(isPresented: $isTimePickerPresented) {
             TimePickerView(
-                maxTime: 8,
+                maxTime: maxQuarterMinutes,
                 timeString: $timeString,
                 onSubmit: {
                     Task {
@@ -108,7 +108,6 @@ struct StealView: View {
                     }
                     presentationMode.wrappedValue.dismiss()
                     presentationMode.wrappedValue.dismiss()
-                    print(timeString)
                 },
                 onCancel: {
                     // Simply dismiss the TimePickerView and stay in ExclusionView

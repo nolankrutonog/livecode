@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TimePickerView: View {
+    @EnvironmentObject var firebaseManager: FirebaseManager
     let maxTime: Int // Maximum time in minutes
     @Binding var timeString: String
     let onSubmit: () -> Void
@@ -149,7 +150,7 @@ struct TimePickerView_Preview: PreviewProvider {
     @State static var isPresented = true
     @State static var timeString: String = ""
     static var previews: some View {
-        TimePickerView(maxTime: 8, timeString: $timeString, onSubmit: {
+        TimePickerView(maxTime: maxQuarterMinutes, timeString: $timeString, onSubmit: {
             print(timeString)
         }, onCancel: {
             print("canceled")

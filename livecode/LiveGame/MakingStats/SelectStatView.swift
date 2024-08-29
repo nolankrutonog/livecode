@@ -27,22 +27,43 @@ struct SelectStatView: View {
     }
     
     var body: some View {
+            
         VStack {
-//            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    NavigationLink(destination: ShotView()) {
+                    NavigationLink(destination: ShotView(
+                        gameDocumentName: gameDocumentName,
+                        quarter: quarter,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        homeInTheGame: homeInTheGame,
+                        awayInTheGame: awayInTheGame
+                    )) {
                         StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
                     }
                     
-                    NavigationLink(destination: TurnoverView(gameDocumentName: gameDocumentName, quarter: quarter, homeTeam: homeTeam, awayTeam: awayTeam, homeInTheGame: homeInTheGame, awayInTheGame: awayInTheGame)) {
+                    NavigationLink(destination: TurnoverView(
+                        gameDocumentName: gameDocumentName,
+                        quarter: quarter,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        homeInTheGame: homeInTheGame,
+                        awayInTheGame: awayInTheGame
+                    )) {
                         StatButton(label: "Turnover", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "hand.thumbsdown.fill")
                     }
                     
-                    NavigationLink(destination: ExclusionView(gameDocumentName: gameDocumentName, quarter: quarter, homeTeam: homeTeam, awayTeam: awayTeam, homeInTheGame: homeInTheGame, awayInTheGame: awayInTheGame)) {
+                    NavigationLink(destination: ExclusionView(
+                        gameDocumentName: gameDocumentName,
+                        quarter: quarter,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        homeInTheGame: homeInTheGame,
+                        awayInTheGame: awayInTheGame
+                    )) {
                         StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
                     }
-
+                    
                     NavigationLink(destination: StealView(
                         gameDocumentName: gameDocumentName,
                         quarter: quarter,
@@ -54,15 +75,20 @@ struct SelectStatView: View {
                         StatButton(label: "Steal", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "volleyball.fill")
                     }
                     
-                    NavigationLink(destination: TimeoutView()) {
+                    NavigationLink(destination: TimeoutView(
+                        gameDocumentName: gameDocumentName,
+                        quarter: quarter,
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam
+                    )) {
                         StatButton(label: "Timeout", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "timer")
                     }
                     
-
+                    
                 }
                 .padding()
                 
-
+                
             }
             Spacer()
         }
@@ -129,19 +155,7 @@ struct StatButton: View {
 }
 
 
-struct TimeoutView: View {
-    var body: some View {
-        Text("Timeout View")
-    }
-}
 
-
-
-struct ShotView: View {
-    var body: some View {
-        Text("Shot View")
-    }
-}
 
 
 struct SelectStatView_Preview: PreviewProvider {

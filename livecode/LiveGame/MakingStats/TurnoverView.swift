@@ -50,7 +50,7 @@ struct TurnoverView: View {
         }
         .sheet(isPresented: $isTimePickerPresented) {
             TimePickerView(
-                maxTime: 8,
+                maxTime: maxQuarterMinutes,
                 timeString: $timeString,
                 onSubmit: {
                     Task {
@@ -68,7 +68,6 @@ struct TurnoverView: View {
                     }
                     presentationMode.wrappedValue.dismiss()
                     presentationMode.wrappedValue.dismiss()
-                    print(timeString)
                 },
                 onCancel: {
                     // Simply dismiss the TimePickerView and stay in TurnoverView

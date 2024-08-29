@@ -20,6 +20,8 @@ struct NewGameView: View {
     @State private var isLoading: Bool = true
     @State private var errMsg: String?
     
+    @State private var gameDocumentName: String = ""
+    
     var generatedGameName: String {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withYear, .withMonth, .withDay, .withDashSeparatorInDate]
@@ -67,21 +69,78 @@ struct NewGameView: View {
                                 Text(teamName).tag(teamName)
                             }
                         }
-                        
+
                         DatePicker("Select Date", selection: $gameDate, displayedComponents: .date)
-                        
+
                         TextField("Game Name", text: $gameName)
                             .onChange(of: gameName) { _, _ in
                                 isGameNameEdited = true
                             }
                     }
                 }
+            
+//            VStack(spacing: 0) {
+//                Form {
+//                    Section(header: Text("Game Details")) {
+//                        Picker("Home Team", selection: $homeTeam) {
+//                            Text("Select Home Team").tag("")
+//                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+//                                Text(teamName).tag(teamName)
+//                            }
+//                        }
+//                        .font(.title2)
+//                        .pickerStyle(MenuPickerStyle()) // Use this if you want a different style, like a menu
+//                        .frame(height: 60) // Set a custom height for the picker
+////                        .padding(.vertical, 10) // Add vertical padding to increase the touch area
+//                        .contentShape(Rectangle()) // Ensure the entire area is tappable
+//
+//                        Picker("Away Team", selection: $awayTeam) {
+//                            Text("Select Away Team").tag("")
+//                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+//                                Text(teamName).tag(teamName)
+//                            }
+//                        }
+//                        .font(.title2)
+//                        .pickerStyle(MenuPickerStyle()) // You can change this to WheelPickerStyle() if desired
+//                        .frame(height: 60) // Set a custom height for the picker
+////                        .padding(.vertical, 10) // Add vertical padding to increase the touch area
+//                        .contentShape(Rectangle()) // Ensure the entire area is tappable
+//
+//                        DatePicker("Select Date", selection: $gameDate, displayedComponents: .date)
+//                            .font(.title2)
+//                            .frame(height: 60) // Set a custom height for the DatePicker
+////                            .padding(.vertical, 10)  Add vertical padding to increase the touch area
+//                            .contentShape(Rectangle()) // Ensure the entire area is tappable
+//
+//                        TextField("Game Name", text: $gameName)
+//                            .onChange(of: gameName) { _, _ in
+//                                isGameNameEdited = true
+//                            }
+//                            .font(.title2)
+//                            .frame(height: 60) // Set a custom height for the TextField
+////                            .padding(.vertical, 10) // Add vertical padding to increase the touch area
+//                            .contentShape(Rectangle()) // Ensure the entire area is tappable
+//                    }
+//                }
+//                .padding(.top) // Optional: Add some padding at the top of the form
+//                .padding(.bottom) // Optional: Add some padding at the bottom of the form
+            
                 
-                NavigationLink(destination: GameView(homeTeam: homeTeam,
-                                                     awayTeam: awayTeam,
-                                                     gameName: gameName)
-                    .environmentObject(firebaseManager)
-                ) {
+                Button(action: {
+                    // create new game here
+                    if isFormValid {
+                        Task {
+                            do {
+                                try await firebaseManager.fetchRosters()
+//                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
+                                gameDocumentName = "Stanford_vs_UCLA_2024-08-28_1724874036"
+                            } catch {
+                                print("Error creating game \(gameName)")
+                            }
+                        }
+                    navigateToGame = true
+                    }
+                }) {
                     Text("Start Game")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -89,11 +148,14 @@ struct NewGameView: View {
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
-                .disabled(!isFormValid)
                 .padding()
             }
             .navigationTitle("New Game")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $navigateToGame) {
+                GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameDocumentName: gameDocumentName)
+                    .environmentObject(firebaseManager)
+            }
             .onChange(of: homeTeam) { _, _ in updateGameName() }
             .onChange(of: awayTeam) { _, _ in updateGameName() }
             .onChange(of: gameDate) { _, _ in updateGameName() }
@@ -127,7 +189,7 @@ struct NewGameView: View {
 
 
 struct NewGameView_Preview: PreviewProvider {
-    @StateObject static var firebaseManager = FirebaseManager()
+    @StateObject static var firebaseManager: FirebaseManager = FirebaseManager()
     static var previews: some View {
         NavigationStack {
             NewGameView()

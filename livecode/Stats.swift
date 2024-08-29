@@ -48,7 +48,7 @@ struct ExclusionKeys {
     static let exclusionTypes = [
         "On ball center",
         "On ball",
-        "Off ball"
+        "Off ball",
     ]
     
     static let onBall = "on_ball"
@@ -86,10 +86,130 @@ struct PhaseOfGameKeys {
     ]
 }
 
+struct TimeoutKeys {
+    static let team = "team"
+}
 
 
+struct ShotKeys {
+    static let team = "team"
+    static let player = "player"
+    static let phaseOfGame = "phase_of_game"
+    static let shooterPosition = "shooter_position"
+    static let shotLocation = "shot_location"
+    static let shotDetails = "shot_details"
+    static let shotResult = "shot_result"
+    static let assistedBy = "assisted_by"
+    static let goalConcededBy = "goal_conceded_by"
+    static let fieldBlockedBy = "field_blocked_by"
+    static let savedBy = "saved_by"
+    
+    struct phases {
+        static let frontCourtOffense = "front_court_offense"
+        static let sixOnFive = "6v5"
+        static let transitionOffense = "transition_offense"
+        static let penalty = "penalty"
+    }
+    
+    struct dispPhases {
+        static let frontCourtOffense = "Front court offense"
+        static let sixOnFive = "6v5"
+        static let transitionOffense = "Transition offense"
+        static let penalty = "Penalty"
+    }
+    
+    struct fcoPositions {
+        static let one = "1"
+        static let two = "2"
+        static let three = "3"
+        static let four = "4"
+        static let five = "5"
+        static let center = "center"
+        static let postUp = "post_up"
+        static let drive = "drive"
+    }
+    
+    struct dispFcoPositions {
+        static let one = "1"
+        static let two = "2"
+        static let three = "3"
+        static let four = "4"
+        static let five = "5"
+        static let center = "Center"
+        static let postUp = "Post up"
+        static let drive = "Drive"
+    }
+    struct sixOnFivePositions {
+        static let one = "1"
+        static let two = "2"
+        static let three = "3"
+        static let four = "4"
+        static let five = "5"
+        static let six = "6"
+        static let postUp = "post_up"
+        static let drive = "drive"
+    }
+    
+    struct transitionOffensePositions {
+        static let leftSide = "left_side"
+        static let rightSide = "right_side"
+        static let postUp = "post_up"
+    }
+    
+    struct dispTransitionOffensePositions {
+        static let leftSide = "Left side"
+        static let rightSide = "Right side"
+        static let postUp = "Post up"
+    }
 
+    struct shotLocations {
+        static let one = "1"
+        static let two = "2"
+        static let three = "3"
+        static let four = "4"
+        static let five = "5"
+    }
+    
+    static let locationNumToValue = [
+        "1": "Goalie right low",
+        "2": "Goalie right high",
+        "3": "Donut",
+        "4": "Goalie left high",
+        "5": "Goalie left low"
+    ]
+    
+    struct shotDetailKeys {
+//        static let skip = "skip"
+        static let fake = "fake"
+        static let catchAndShoot = "catch_and_shoot"
+        static let pickupAndShoot = "pickup_and_shoot"
+        static let foulSixMeters = "foul_six_meters"
+    }
+    
+    struct dispShotDetailKeys {
+//        static let skip = "Skip"
+        static let fake = "Fake"
+        static let catchAndShoot = "Catch and shoot"
+        static let pickupAndShoot = "Pickup and shoot"
+        static let foulSixMeters = "Foul six meters"
+    }
 
+    
+    struct shotResults {
+        static var goal = "goal"
+        static var fieldBlock = "field_block"
+        static var goalieSave = "goalie_save"
+        static var miss = "miss"
+    }
+    
+    struct dispShotResults {
+        static var goal = "Goal"
+        static var fieldBlock = "Field Block"
+        static var goalieSave = "Goalie Save"
+        static var miss = "Miss"
+    }
+
+}
 
 
 

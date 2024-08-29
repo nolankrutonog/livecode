@@ -84,6 +84,7 @@ class FirebaseManager: ObservableObject {
         return newGameName
     }
     
+    
     /* creates a lineup stat in the given gameDocumentName */
     func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
                           homeTeam: String, awayTeam: String,
@@ -91,25 +92,23 @@ class FirebaseManager: ObservableObject {
         
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let lineupData: [String: Any] = [
-            statType: StatType.lineup,
-            LineupKeys.homeTeam: homeTeam,
-            LineupKeys.awayTeam: awayTeam,
-            LineupKeys.homeInTheGame: [
-                LineupKeys.goalies: homeInTheGame.goalies,
-                LineupKeys.field: homeInTheGame.field
-            ],
-            LineupKeys.awayInTheGame: [
-                LineupKeys.goalies: awayInTheGame.goalies,
-                LineupKeys.field: awayInTheGame.field
+            StatType.lineup: [
+                LineupKeys.homeTeam: homeTeam,
+                LineupKeys.awayTeam: awayTeam,
+                LineupKeys.homeInTheGame: [
+                    LineupKeys.goalies: homeInTheGame.goalies,
+                    LineupKeys.field: homeInTheGame.field
+                ],
+                LineupKeys.awayInTheGame: [
+                    LineupKeys.goalies: awayInTheGame.goalies,
+                    LineupKeys.field: awayInTheGame.field
+                ]
             ]
         ]
         
         do {
             try await db.collection("games")
                 .document(gameDocumentName)
-//                .updateData([
-//                    StatKeys.lineup : FieldValue.arrayUnion([timeElapsed: lineupData])
-//                ])
                 .setData(["\(timeElapsed)": lineupData], merge: true)
         } catch {
             throw FirebaseError.lineupStatCreationFailed(gameDocumentName: gameDocumentName)
@@ -120,19 +119,15 @@ class FirebaseManager: ObservableObject {
     func createTurnoverStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let turnoverData: [String: Any] = [
-//            TurnoverKeys.quarter: quarter,
-//            TurnoverKeys.timeString: timeString,
-            statType: StatType.turnover,
-            TurnoverKeys.team: team,
-            TurnoverKeys.player: player
+            StatType.turnover: [
+                TurnoverKeys.team: team,
+                TurnoverKeys.player: player
+            ]
         ]
         
         do {
             try await db.collection("games")
                 .document(gameDocumentName)
-//                .updateData([
-//                    StatKeys.turnover: FieldValue.arrayUnion([timeElapsed: turnoverData])
-//                ])
                 .setData(["\(timeElapsed)": turnoverData], merge: true)
         } catch {
             throw FirebaseError.turnoverStatCreationFailed(gameDocumentName: gameDocumentName)
@@ -148,12 +143,13 @@ class FirebaseManager: ObservableObject {
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let exclusionData: [String: Any] = [
-            statType: StatType.exclusion,
-            ExclusionKeys.excludedTeam: excludedTeam,
-            ExclusionKeys.excludedPlayer: excludedPlayer,
-            ExclusionKeys.phaseOfGame: phaseOfGame,
-            ExclusionKeys.exclusionType: exclusionType,
-            ExclusionKeys.drawnBy: drawnBy
+            StatType.exclusion: [
+                ExclusionKeys.excludedTeam: excludedTeam,
+                ExclusionKeys.excludedPlayer: excludedPlayer,
+                ExclusionKeys.phaseOfGame: phaseOfGame,
+                ExclusionKeys.exclusionType: exclusionType,
+                ExclusionKeys.drawnBy: drawnBy
+            ]
         ]
         
         do {
@@ -165,18 +161,19 @@ class FirebaseManager: ObservableObject {
         }
     }
     
+    /* creates a steal statistic for the game GAME_DOCUMENT_NAME */
     func createStealStat(gameDocumentName: String, quarter: Int,
                          timeString: String, selectedTeam: String,
                          stolenBy: String, turnoverBy: String
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let stealData: [String: Any] = [
-            statType: StatType.steal,
-            StealKeys.team: selectedTeam,
-            StealKeys.stolenBy: stolenBy,
-            StealKeys.turnoverBy: turnoverBy
+            StatType.steal: [
+                StealKeys.team: selectedTeam,
+                StealKeys.stolenBy: stolenBy,
+                StealKeys.turnoverBy: turnoverBy
+            ]
         ]
-        
 
         do {
             try await db.collection("games")
@@ -184,6 +181,25 @@ class FirebaseManager: ObservableObject {
                 .setData(["\(timeElapsed)": stealData], merge: true)
         } catch {
             throw FirebaseError.stealStatCreationFailed(gameDocumentName: gameDocumentName)
+        }
+    }
+    
+    func createTimeoutStat(gameDocumentName: String, quarter: Int,
+                           timeString: String, selectedTeam: String
+    ) async throws {
+        let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
+        let timeoutData: [String: Any] = [
+            StatType.timeout: [
+                TimeoutKeys.team: selectedTeam
+            ]
+        ]
+        
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .setData(["\(timeElapsed)": timeoutData], merge: true)
+        } catch {
+            throw FirebaseError.timoutStatCreationFailed(gameDocumentName: gameDocumentName)
         }
     }
 
@@ -197,6 +213,7 @@ enum FirebaseError: Error, LocalizedError {
     case turnoverStatCreationFailed(gameDocumentName: String)
     case exclusionStatCreationFailed(gameDocumentName: String)
     case stealStatCreationFailed(gameDocumentName: String)
+    case timoutStatCreationFailed(gameDocumentName: String)
     case networkError
     
     var errorDescription: String? {
@@ -213,6 +230,8 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to upload exclusion stat to game \(gameDocumentName)"
         case .stealStatCreationFailed(let gameDocumentName):
             return "Failed to upload steal stat to game \(gameDocumentName)"
+        case .timoutStatCreationFailed(let gameDocumentName):
+            return "Failed to upload timout stat to game \(gameDocumentName)"
         case .networkError:
             return "Network error occurred. Please check your internet connection"
         }

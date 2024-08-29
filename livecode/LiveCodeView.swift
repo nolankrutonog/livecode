@@ -79,25 +79,17 @@ struct MenuButton: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.title2.bold())
             Text(title)
-                .font(.headline)
+                .font(.title)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: 150)
         .padding()
         .background(Color.black.opacity(0.1)) // Light black background for buttons
         .foregroundColor(.black) // Black font color for button text
         .cornerRadius(15)
-        .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(Color.black, lineWidth: 1) // Black border for buttons
-        )
     }
 }
-
-//#Preview {
-//    LiveCodeView()
-//}
 
 struct LiveCodeView_Preview: PreviewProvider {
     static var previews: some View {
