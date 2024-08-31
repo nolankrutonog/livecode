@@ -79,66 +79,25 @@ struct NewGameView: View {
                     }
                 }
             
-//            VStack(spacing: 0) {
-//                Form {
-//                    Section(header: Text("Game Details")) {
-//                        Picker("Home Team", selection: $homeTeam) {
-//                            Text("Select Home Team").tag("")
-//                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
-//                                Text(teamName).tag(teamName)
-//                            }
-//                        }
-//                        .font(.title2)
-//                        .pickerStyle(MenuPickerStyle()) // Use this if you want a different style, like a menu
-//                        .frame(height: 60) // Set a custom height for the picker
-////                        .padding(.vertical, 10) // Add vertical padding to increase the touch area
-//                        .contentShape(Rectangle()) // Ensure the entire area is tappable
-//
-//                        Picker("Away Team", selection: $awayTeam) {
-//                            Text("Select Away Team").tag("")
-//                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
-//                                Text(teamName).tag(teamName)
-//                            }
-//                        }
-//                        .font(.title2)
-//                        .pickerStyle(MenuPickerStyle()) // You can change this to WheelPickerStyle() if desired
-//                        .frame(height: 60) // Set a custom height for the picker
-////                        .padding(.vertical, 10) // Add vertical padding to increase the touch area
-//                        .contentShape(Rectangle()) // Ensure the entire area is tappable
-//
-//                        DatePicker("Select Date", selection: $gameDate, displayedComponents: .date)
-//                            .font(.title2)
-//                            .frame(height: 60) // Set a custom height for the DatePicker
-////                            .padding(.vertical, 10)  Add vertical padding to increase the touch area
-//                            .contentShape(Rectangle()) // Ensure the entire area is tappable
-//
-//                        TextField("Game Name", text: $gameName)
-//                            .onChange(of: gameName) { _, _ in
-//                                isGameNameEdited = true
-//                            }
-//                            .font(.title2)
-//                            .frame(height: 60) // Set a custom height for the TextField
-////                            .padding(.vertical, 10) // Add vertical padding to increase the touch area
-//                            .contentShape(Rectangle()) // Ensure the entire area is tappable
-//                    }
-//                }
-//                .padding(.top) // Optional: Add some padding at the top of the form
-//                .padding(.bottom) // Optional: Add some padding at the bottom of the form
-            
                 
                 Button(action: {
                     // create new game here
                     if isFormValid {
                         Task {
                             do {
-                                try await firebaseManager.fetchRosters()
-//                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
-                                gameDocumentName = "Stanford_vs_UCLA_2024-08-28_1724874036"
+//                                try await firebaseManager.fetchRosters()
+                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
+//                                gameDocumentName = "Stanford_vs_UCLA_2024-08-28_1724874036"
+                                if gameDocumentName.isEmpty {
+                                    print("GDN is empty")
+                                } else {
+                                    print("GDN is not empty")
+                                    navigateToGame = true
+                                }
                             } catch {
                                 print("Error creating game \(gameName)")
                             }
                         }
-                    navigateToGame = true
                     }
                 }) {
                     Text("Start Game")
@@ -161,9 +120,12 @@ struct NewGameView: View {
             .onChange(of: gameDate) { _, _ in updateGameName() }
         }
     }
-    
+   
     private func updateGameName() {
-        if !isGameNameEdited && !homeTeam.isEmpty && !awayTeam.isEmpty {
+//        if !isGameNameEdited && !homeTeam.isEmpty && !awayTeam.isEmpty {
+//            gameName = generatedGameName
+//        }
+        if !homeTeam.isEmpty && !awayTeam.isEmpty {
             gameName = generatedGameName
         }
     }

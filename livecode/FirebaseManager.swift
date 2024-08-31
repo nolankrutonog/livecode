@@ -13,15 +13,15 @@ class FirebaseManager: ObservableObject {
     let db = Firestore.firestore()
     private var isFetched: Bool = false
     
-    init() {
-        Task {
-            do {
-                try await fetchRosters()
-            } catch {
-                print("Error fetching rosters: \(error.localizedDescription)")
-            }
-        }
-    }
+//    init() {
+//        Task {
+//            do {
+//                try await fetchRosters()
+//            } catch {
+//                print("Error fetching rosters: \(error.localizedDescription)")
+//            }
+//        }
+//    }
     
     
     func toTimeElapsed(timeString: String, quarter: Int) -> Int {
@@ -80,7 +80,6 @@ class FirebaseManager: ObservableObject {
             print("Error creating game: \(gameName)")
             throw FirebaseError.gameCreationFailed(gameName: gameName)
         }
-        print(newGameName)
         return newGameName
     }
     
@@ -89,6 +88,8 @@ class FirebaseManager: ObservableObject {
     func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
                           homeTeam: String, awayTeam: String,
                            homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
+        
+        assert(!gameDocumentName.isEmpty)
         
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let lineupData: [String: Any] = [
@@ -202,6 +203,52 @@ class FirebaseManager: ObservableObject {
             throw FirebaseError.timoutStatCreationFailed(gameDocumentName: gameDocumentName)
         }
     }
+    
+    func createShotStat(gameDocumentName: String, quarter: Int, timeString: String,
+                        selectedTeam: String, shooter: String, phaseOfGame: String,
+                        shooterPosition: String, shotLocation: String, shotDetail: String,
+                        isSkip: Bool, shotResult: String, assistedBy: String, goalConcededBy: String,
+                        fieldBlockedBy: String, savedBy: String
+    ) async throws {
+        let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
+        var shotData: [String: Any] = [
+            StatType.shot: [
+                ShotKeys.team: selectedTeam,
+                ShotKeys.shooter: shooter,
+                ShotKeys.phaseOfGame: phaseOfGame,
+                ShotKeys.shotLocation: shotLocation,
+                ShotKeys.isSkip: isSkip,
+                ShotKeys.shotResult: shotResult
+            ]
+        ]
+        
+        if var shotDetails = shotData[StatType.shot] as? [String: Any] {
+            
+            if phaseOfGame != ShotKeys.phases.penalty {
+                shotDetails[ShotKeys.shooterPosition] = shooterPosition
+                shotDetails[ShotKeys.shotDetail] = shotDetail
+            }
+            
+            if shotResult == ShotKeys.shotResults.goal {
+                shotDetails[ShotKeys.assistedBy] = assistedBy
+                shotDetails[ShotKeys.goalConcededBy] = goalConcededBy
+            } else if shotResult == ShotKeys.shotResults.goalieSave {
+                shotDetails[ShotKeys.savedBy] = savedBy
+            } else if shotResult == ShotKeys.shotResults.fieldBlock {
+                shotDetails[ShotKeys.fieldBlockedBy] = fieldBlockedBy
+            }
+            
+            shotData[StatType.shot] = shotDetails
+        }
+        
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .setData(["\(timeElapsed)": shotData], merge: true)
+        } catch {
+            throw FirebaseError.shotStatCreationFailed(gameDocumentName: gameDocumentName)
+        }
+    }
 
 }
 
@@ -214,6 +261,7 @@ enum FirebaseError: Error, LocalizedError {
     case exclusionStatCreationFailed(gameDocumentName: String)
     case stealStatCreationFailed(gameDocumentName: String)
     case timoutStatCreationFailed(gameDocumentName: String)
+    case shotStatCreationFailed(gameDocumentName: String)
     case networkError
     
     var errorDescription: String? {
@@ -232,6 +280,8 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to upload steal stat to game \(gameDocumentName)"
         case .timoutStatCreationFailed(let gameDocumentName):
             return "Failed to upload timout stat to game \(gameDocumentName)"
+        case .shotStatCreationFailed(let gameDocumentName):
+            return "Failed to upload shot stat to game \(gameDocumentName)"
         case .networkError:
             return "Network error occurred. Please check your internet connection"
         }

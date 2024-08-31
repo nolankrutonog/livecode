@@ -8,7 +8,12 @@
 
 import SwiftUI
 
-struct Lineup {
+//struct Lineup {
+//    var goalies: [String] = []
+//    var field: [String] = []
+//}
+
+struct Lineup: Equatable, Hashable {
     var goalies: [String] = []
     var field: [String] = []
 }

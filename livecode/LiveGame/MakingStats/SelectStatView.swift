@@ -27,18 +27,30 @@ struct SelectStatView: View {
     }
     
     var body: some View {
-            
+        
+//        NavigationStack(path: $navigationPath) {
         VStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    NavigationLink(destination: ShotView(
+                    NavigationLink(destination: SingleShotView(
                         gameDocumentName: gameDocumentName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
                         homeInTheGame: homeInTheGame,
                         awayInTheGame: awayInTheGame
-                    )) {
+                    ).environmentObject(firebaseManager)
+//                                    ShotView(
+//                        gameDocumentName: gameDocumentName,
+//                        quarter: quarter,
+//                        homeTeam: homeTeam,
+//                        awayTeam: awayTeam,
+//                        homeInTheGame: homeInTheGame,
+//                        awayInTheGame: awayInTheGame,
+//                        navigationPath: $navigationPath
+//                    )
+                                   
+                    ) {
                         StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
                     }
                     
@@ -92,6 +104,7 @@ struct SelectStatView: View {
             }
             Spacer()
         }
+//        }
     }
 }
 
@@ -159,6 +172,7 @@ struct StatButton: View {
 
 
 struct SelectStatView_Preview: PreviewProvider {
+    @State static var navigationPath: [AnyHashable] = []
     static var previews: some View {
         NavigationStack {
             SelectStatView(
@@ -168,6 +182,7 @@ struct SelectStatView_Preview: PreviewProvider {
                 awayTeam: "UCLA",
                 homeInTheGame: stanfordInTheGame,
                 awayInTheGame: uclaInTheGame
+//                navigationPath: $navigationPath
             )
             .environmentObject(FirebaseManager())
         }

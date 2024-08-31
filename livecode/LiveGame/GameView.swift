@@ -13,9 +13,10 @@ struct GameView: View {
     
     let homeTeam: String
     let awayTeam: String
-    var gameDocumentName: String = ""
+//    let gameName: String
+    let gameDocumentName: String
     
-//    var game: Game
+//    @State private var navigationPath: [AnyHashable] = []
     
     @State private var currentQuarter = 1
     @State private var showNewStat = false
@@ -38,10 +39,14 @@ struct GameView: View {
         self.awayTeam = awayTeam
         self.gameDocumentName = gameDocumentName
     }
-    
+//    init(homeTeam: String, awayTeam: String, gameName: String) {
+//        self.homeTeam = homeTeam
+//        self.awayTeam = awayTeam
+//        self.gameName = gameName
+//    }
+
     var body: some View {
-        NavigationStack {
-            
+//        NavigationStack(path: $navigationPath) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Spacer() // Center the title
@@ -118,7 +123,10 @@ struct GameView: View {
                     awayTeam: awayTeam,
                     homeInTheGame: homeInTheGame,
                     awayInTheGame: awayInTheGame
-                )) {
+//                    navigationPath: $navigationPath
+                )
+                    .environmentObject(firebaseManager)
+                ) {
                     Text("Stat")
                         .font(.title)
                         .padding()
@@ -128,6 +136,24 @@ struct GameView: View {
                         .cornerRadius(15)
                 }
                 .padding(.horizontal)
+                
+                //                NavigationLink(destination: AudioStatView(
+                //                    gameDocumentName: gameDocumentName,
+                //                    quarter: currentQuarter,
+                //                    homeTeam: homeTeam,
+                //                    awayTeam: awayTeam,
+                //                    homeInTheGame: homeInTheGame,
+                //                    awayInTheGame: awayInTheGame
+                //                )) {
+                //                    Text("Audio Stat")
+                //                        .font(.title)
+                //                        .padding()
+                //                        .frame(maxWidth: .infinity, minHeight: 100)
+                //                        .background(Color.blue)
+                //                        .foregroundColor(.white)
+                //                        .cornerRadius(15)
+                //                }
+                //                .padding(.horizontal)
                 
                 Spacer()
                 
@@ -162,17 +188,24 @@ struct GameView: View {
                 if !hasAppeared {
                     hasAppeared = true // Set this to true so it only runs once
                     
-                    // TODO: when done testing uncomment
-//                    homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
-//                    awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
+//                    Task {
+//                        do {
+//                            gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameDocumentName)
+//                        } catch {
+//                            
+//                        }
+//                    }
+                    homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
+                    awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
                     
+                    // TODO: when done testing comment
                     homeInTheGame = stanfordInTheGame
                     awayInTheGame = uclaInTheGame
                     homeBench = stanfordBench
                     awayBench = uclaBench
                 }
             }
-        }
+//        }
     }
 }
 
@@ -184,7 +217,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameDocumentName: "Stanford_vs_UCLA_2024-08-28_1724874036")
+                     gameDocumentName: "Stanford_vs_UCLA_2024-08-31_1725080445")
             .environmentObject(firebaseManager)
         }
         
@@ -202,3 +235,4 @@ struct GameView_Previews: PreviewProvider {
 //        }
     }
 }
+

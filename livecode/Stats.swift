@@ -93,11 +93,12 @@ struct TimeoutKeys {
 
 struct ShotKeys {
     static let team = "team"
-    static let player = "player"
+    static let shooter = "shooter"
     static let phaseOfGame = "phase_of_game"
     static let shooterPosition = "shooter_position"
     static let shotLocation = "shot_location"
-    static let shotDetails = "shot_details"
+    static let shotDetail = "shot_detail"
+    static let isSkip = "is_skip"
     static let shotResult = "shot_result"
     static let assistedBy = "assisted_by"
     static let goalConcededBy = "goal_conceded_by"
@@ -127,6 +128,7 @@ struct ShotKeys {
         static let center = "center"
         static let postUp = "post_up"
         static let drive = "drive"
+//        static let redirect = "redirect"
     }
     
     struct dispFcoPositions {
@@ -138,6 +140,7 @@ struct ShotKeys {
         static let center = "Center"
         static let postUp = "Post up"
         static let drive = "Drive"
+//        static let redirect = "Redirect"
     }
     struct sixOnFivePositions {
         static let one = "1"
@@ -184,7 +187,16 @@ struct ShotKeys {
         static let catchAndShoot = "catch_and_shoot"
         static let pickupAndShoot = "pickup_and_shoot"
         static let foulSixMeters = "foul_six_meters"
+        static let redirect = "redirect"
     }
+    
+    static let detailKeyToDisp = [
+        shotDetailKeys.fake: dispShotDetailKeys.fake,
+        shotDetailKeys.catchAndShoot: dispShotDetailKeys.catchAndShoot,
+        shotDetailKeys.pickupAndShoot: dispShotDetailKeys.pickupAndShoot,
+        shotDetailKeys.foulSixMeters: dispShotDetailKeys.foulSixMeters,
+        shotDetailKeys.redirect: dispShotDetailKeys.redirect
+    ]
     
     struct dispShotDetailKeys {
 //        static let skip = "Skip"
@@ -192,6 +204,7 @@ struct ShotKeys {
         static let catchAndShoot = "Catch and shoot"
         static let pickupAndShoot = "Pickup and shoot"
         static let foulSixMeters = "Foul six meters"
+        static let redirect = "Redirect"
     }
 
     
@@ -208,6 +221,13 @@ struct ShotKeys {
         static var goalieSave = "Goalie Save"
         static var miss = "Miss"
     }
+    
+    static let resultKeyToDisp = [
+        shotResults.goal: dispShotResults.goal,
+        shotResults.fieldBlock: dispShotResults.fieldBlock,
+        shotResults.goalieSave: dispShotResults.goalieSave,
+        shotResults.miss: dispShotResults.miss
+    ]
 
 }
 
