@@ -87,13 +87,7 @@ struct NewGameView: View {
                             do {
 //                                try await firebaseManager.fetchRosters()
                                 gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
-//                                gameDocumentName = "Stanford_vs_UCLA_2024-08-28_1724874036"
-                                if gameDocumentName.isEmpty {
-                                    print("GDN is empty")
-                                } else {
-                                    print("GDN is not empty")
-                                    navigateToGame = true
-                                }
+                                navigateToGame = true
                             } catch {
                                 print("Error creating game \(gameName)")
                             }

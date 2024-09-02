@@ -11,6 +11,20 @@ struct TeamLineupView: View {
     let teamName: String
     @Binding var inTheGame: Lineup
     @Binding var bench: Lineup
+    @Binding private var isSevenOnSix: Bool
+    
+    @State private var fullInTheGame: [String]
+    @State private var fullBench: [String]
+    
+    init(teamName: String, inTheGame: Binding<Lineup>, bench: Binding<Lineup>, isSevenOnSix: Binding<Bool>) {
+        self.teamName = teamName
+        self._inTheGame = inTheGame
+        self._bench = bench
+        self._isSevenOnSix = isSevenOnSix
+        
+        _fullInTheGame = State(initialValue: inTheGame.wrappedValue.goalies + inTheGame.wrappedValue.field)
+        _fullBench = State(initialValue: bench.wrappedValue.goalies + bench.wrappedValue.field)
+    }
 
     let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
     let buttonWidth: CGFloat = 120 // Fixed width for buttons
@@ -18,6 +32,127 @@ struct TeamLineupView: View {
     let maxNameLength: Int = 15
 
     var body: some View {
+        VStack {
+//            Picker("7v6", selection: $isSevenOnSix) {
+//                Text("Regular").tag(false)
+//                Text("7v6").tag(true)
+//            }
+            if !isSevenOnSix {
+                regularView()
+            } else {
+                sevenOnSixView()
+            }
+
+        }
+    }
+    
+//    private func sevenOnSixInGame() -> some View {
+//        ForEach(inTheGame.goalies + inTheGame.field, id: \.self) { player in
+//            Button(action: {
+//                // going to bench
+//                if let index = inTheGame.field.firstIndex(of: player) {
+//                    inTheGame.field.remove(at: index)
+//                    bench.field.insert(player, at: 0)
+//                } else if let index = inTheGame.goalie.firstIndex(of: player) {
+//                    inTheGame.goalies.remove(at: index)
+//                    bench.goalies.insert(player, at: 0)
+//                }
+//            }) {
+//                Text(abbreviateName(player))
+//                    .font(.system(size: 12, weight: .medium))
+//                    .lineLimit(1)
+//                    .truncationMode(.tail)
+//                    .padding()
+//                    .frame(width: buttonWidth, height: buttonHeight)
+//                    .background(Color.blue)
+//                    .foregroundColor(.white)
+//                    .cornerRadius(20)
+//                    .overlay(
+//                        RoundedRectangle(cornerRadius: 20)
+//                            .stroke(Color.white, lineWidth: 1)
+//                    )
+//            }
+//        }
+//    }
+    
+    private func sevenOnSixView() -> some View {
+        VStack {
+            HStack {
+                Text("7v6")
+                    .font(.title)
+                    .bold()
+                Spacer()
+            }
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+//                    sevenOnSixInGame()
+                    ForEach(inTheGame.goalies + inTheGame.field, id: \.self) { player in
+                        Button(action: {
+                            // going to bench
+                            if let index = inTheGame.field.firstIndex(of: player) {
+                                inTheGame.field.remove(at: index)
+                                bench.field.insert(player, at: 0)
+                            } else if let index = inTheGame.goalie.firstIndex(of: player) {
+                                inTheGame.goalies.remove(at: index)
+                                bench.goalies.insert(player, at: 0)
+                            }
+                        }) {
+                            Text(abbreviateName(player))
+                                .font(.system(size: 12, weight: .medium))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .padding()
+                                .frame(width: buttonWidth, height: buttonHeight)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(20)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.white, lineWidth: 1)
+                                )
+                        }
+                    }
+                    ForEach(bench.goalies + bench.field, id: \.self) { player in
+                        Button(action: {
+                            // going in the game
+                            let numInGame = inTheGame.field.count + inTheGame.goalies.count
+                            if numInGame < 7 {
+                                if let index = bench.field.firstIndex(of: player) {
+                                    bench.field.remove(at: index)
+                                } else if let index = bench.goalies.firstIndex(of: player) {
+                                    bench.goalies.remove(at: index)
+                                }
+                                
+                                let hasGoalie = inTheGame.goalies.count == 1 ? true : false
+                                if hasGoalie {
+                                    inTheGame.field.append(player)
+                                } else {
+                                    inTheGame.goalies.append(player)
+                                }
+                            }
+                        }) {
+                            Text(abbreviateName(player))
+                                .font(.system(size: 12, weight: .medium))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .padding()
+                                .frame(width: buttonWidth, height: buttonHeight)
+                                .background(Color.gray.opacity(0.3)) // Lighter gray background
+                                .foregroundColor(.black) // Black text color
+                                .cornerRadius(20)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.white, lineWidth: 1)
+                                )
+                        }
+                    }
+                }
+            }
+        }
+        .padding()
+    }
+    
+    private func regularView() -> some View {
         VStack {
             HStack {
                 Text("Goalie")
@@ -143,6 +278,7 @@ struct TeamLineupView: View {
         .padding()
     }
     
+    
     // Helper function to abbreviate names if they are too long
     func abbreviateName(_ name: String) -> String {
         let maxLength = maxNameLength
@@ -178,18 +314,21 @@ struct TeamLineupView: View {
 struct TeamLineupContainerView: View {
     @State var inTheGame: Lineup
     @State var bench: Lineup
+    @State var isSevens: Bool = true
     let teamName: String
     
     var body: some View {
-        TeamLineupView(teamName: teamName, inTheGame: $inTheGame, bench: $bench)
+        TeamLineupView(teamName: teamName, inTheGame: $inTheGame, bench: $bench, isSevenOnSix: $isSevens)
     }
 }
 
 struct TeamLineupsView_Previews: PreviewProvider {
     static var previews: some View {
         TeamLineupContainerView(
-            inTheGame: Lineup(goalies: [], field: ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6"]),
-            bench: Lineup(goalies: ["Konstantinos Mathiopoulos"], field: ["Player7", "Player8", "Player9", "Player10", "Player11"]),
+//            inTheGame: Lineup(goalies: [], field: ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6"]),
+            inTheGame: stanfordInTheGame,
+//            bench: Lineup(goalies: ["Konstantinos Mathiopoulos"], field: ["Player7", "Player8", "Player9", "Player10", "Player11"]),
+            bench: stanfordBench,
             teamName: "Stanford"
         )
         .environmentObject(FirebaseManager())

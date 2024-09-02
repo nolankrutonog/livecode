@@ -36,6 +36,7 @@ struct LineupsView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedTab: Int = 0
+    @State private var isSevenOnSix: Bool = false;
     
     @State private var showingDoneAlert = false
     @State private var doneAlertMessage = ""
@@ -77,12 +78,16 @@ struct LineupsView: View {
                 }
             }
             .padding(.horizontal)
+            Picker("7v6", selection: $isSevenOnSix) {
+                Text("Regular").tag(false)
+                Text("7v6").tag(true)
+            }
             
             // Content View
             if selectedTab == 0 {
-                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench)
+                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench, isSevenOnSix: $isSevenOnSix)
             } else {
-                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench)
+                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench, isSevenOnSix: $isSevenOnSix)
             }
             
             Spacer()

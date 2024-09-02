@@ -66,11 +66,15 @@ struct ExclusionView: View {
                     ForEach(PhaseOfGameKeys.defensePhases, id: \.self) { phase in
                         Text(phase).tag(phase)
                     }
+//                    Text(PhaseOfGameKeys.defensePhases)
                 }
                 
                 Picker("Exclusion type", selection: $exclusionType) {
-                    ForEach(ExclusionKeys.exclusionTypes, id: \.self) { type in
-                        Text(type).tag(type)
+//                    ForEach(ExclusionKeys.exclusionTypes, id: \.self) { type in
+//                        Text(type).tag(type)
+//                    }
+                    ForEach(Array(ExclusionKeys.toDisp), id: \.key) { key, value in
+                        Text(value).tag(key)
                     }
                 }
                 

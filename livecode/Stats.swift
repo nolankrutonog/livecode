@@ -45,15 +45,32 @@ struct ExclusionKeys {
     static let exclusionType = "exclusion_type"
     static let drawnBy = "drawn_by"
     
-    static let exclusionTypes = [
-        "On ball center",
-        "On ball",
-        "Off ball",
-    ]
+    
+    
+//    static let exclusionTypes = [
+//        "On ball center",
+//        "On ball",
+//        "Off ball",
+//        "Penalty"
+//    ]
+    
     
     static let onBall = "on_ball"
     static let offBall = "off_ball"
     static let onBallCenter = "on_ball_center"
+    static let penalty = "penalty"
+    
+    static let dispOnBall = "On ball"
+    static let dispOffBall = "Off ball"
+    static let dispOnBallCenter = "On ball center"
+    static let dispPenalty = "Penalty"
+    
+    static let toDisp = [
+        onBall: dispOnBall,
+        offBall: dispOffBall,
+        onBallCenter: dispOnBallCenter,
+        penalty: dispPenalty
+    ]
 }
 
 struct PhaseOfGameKeys {

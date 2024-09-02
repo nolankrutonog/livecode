@@ -13,10 +13,7 @@ struct GameView: View {
     
     let homeTeam: String
     let awayTeam: String
-//    let gameName: String
     let gameDocumentName: String
-    
-//    @State private var navigationPath: [AnyHashable] = []
     
     @State private var currentQuarter = 1
     @State private var showNewStat = false
@@ -39,173 +36,141 @@ struct GameView: View {
         self.awayTeam = awayTeam
         self.gameDocumentName = gameDocumentName
     }
-//    init(homeTeam: String, awayTeam: String, gameName: String) {
-//        self.homeTeam = homeTeam
-//        self.awayTeam = awayTeam
-//        self.gameName = gameName
-//    }
 
     var body: some View {
-//        NavigationStack(path: $navigationPath) {
-            VStack(alignment: .leading, spacing: 20) {
-                HStack {
-                    Spacer() // Center the title
-                    Text("\(homeTeam) vs. \(awayTeam)")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding()
-                    Spacer() // Center the title
-                }
-                
-                Spacer()
-                
-                Text("Quarter")
-                    .font(.title)
-                    .padding(.horizontal)
-                
-                HStack {
-                    Button(action: {
-                        if currentQuarter > 1 {
-                            currentQuarter -= 1
-                        }
-                    }) {
-                        Text("-")
-                            .font(.largeTitle)
-                            .frame(width: 60, height: 60)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(30)
-                    }
-                    
-                    Spacer()
-                    
-                    Text("\(currentQuarter)")
-                        .font(.system(size: 48, weight: .bold, design: .default))
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        currentQuarter += 1
-                    }) {
-                        Text("+")
-                            .font(.largeTitle)
-                            .frame(width: 60, height: 60)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(30)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Spacer() // Center the title
+                Text("\(homeTeam) vs. \(awayTeam)")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding()
+                Spacer() // Center the title
+            }
+            
+            Spacer()
+            
+            Text("Quarter")
+                .font(.title)
                 .padding(.horizontal)
-                .padding(.bottom)
-                
-                
-                // Larger Lineups button
-                NavigationLink(
-                    destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, quarter: currentQuarter,
-                                             gameDocumentName: gameDocumentName,
-                                             homeInTheGame: $homeInTheGame, homeBench: $homeBench,
-                                             awayInTheGame: $awayInTheGame, awayBench: $awayBench)
-                    .environmentObject(firebaseManager)
-                ) {
-                    Text("Lineups")
-                        .font(.title)
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 100)
-                        .background(Color.gray.opacity(0.2))
-                        .foregroundColor(.primary)
-                        .cornerRadius(15)
-                        .padding(.horizontal)
-                }
-                
-                // TODO: if lineups arent set, then make this button gray
-                NavigationLink(destination: SelectStatView(
-                    gameDocumentName: gameDocumentName,
-                    quarter: currentQuarter,
-                    homeTeam: homeTeam,
-                    awayTeam: awayTeam,
-                    homeInTheGame: homeInTheGame,
-                    awayInTheGame: awayInTheGame
-//                    navigationPath: $navigationPath
-                )
-                    .environmentObject(firebaseManager)
-                ) {
-                    Text("Stat")
-                        .font(.title)
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 100)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
-                }
-                .padding(.horizontal)
-                
-                //                NavigationLink(destination: AudioStatView(
-                //                    gameDocumentName: gameDocumentName,
-                //                    quarter: currentQuarter,
-                //                    homeTeam: homeTeam,
-                //                    awayTeam: awayTeam,
-                //                    homeInTheGame: homeInTheGame,
-                //                    awayInTheGame: awayInTheGame
-                //                )) {
-                //                    Text("Audio Stat")
-                //                        .font(.title)
-                //                        .padding()
-                //                        .frame(maxWidth: .infinity, minHeight: 100)
-                //                        .background(Color.blue)
-                //                        .foregroundColor(.white)
-                //                        .cornerRadius(15)
-                //                }
-                //                .padding(.horizontal)
-                
-                Spacer()
-                
-                // Finish Game button remains at the bottom
+            
+            HStack {
                 Button(action: {
-                    showingAlert = true
+                    if currentQuarter > 1 {
+                        currentQuarter -= 1
+                    }
                 }) {
-                    Text("Finish Game")
-                        .font(.title)
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 60)
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(15)
+                    Text("-")
+                        .font(.largeTitle)
+                        .frame(width: 60, height: 60)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(30)
                 }
-                .padding()
-                .alert(isPresented: $showingAlert) {
-                    Alert(
-                        title: Text("Are you sure you want to finish the game?"),
-                        primaryButton: .destructive(Text("Finish")) {
-                            navigateToFinishedGameStats = true
-                        },
-                        secondaryButton: .cancel()
-                    )
-                }
-                .navigationDestination(isPresented: $navigateToFinishedGameStats) {
-                    FinishedGameStatsView()
-                }
-            }
-            .navigationBarBackButtonHidden(true)
-            .onAppear {
-                if !hasAppeared {
-                    hasAppeared = true // Set this to true so it only runs once
-                    
-//                    Task {
-//                        do {
-//                            gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameDocumentName)
-//                        } catch {
-//                            
-//                        }
-//                    }
-                    homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
-                    awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
-                    
-                    // TODO: when done testing comment
-                    homeInTheGame = stanfordInTheGame
-                    awayInTheGame = uclaInTheGame
-                    homeBench = stanfordBench
-                    awayBench = uclaBench
+                
+                Spacer()
+                
+                Text("\(currentQuarter)")
+                    .font(.system(size: 48, weight: .bold, design: .default))
+                
+                Spacer()
+                
+                Button(action: {
+                    currentQuarter += 1
+                }) {
+                    Text("+")
+                        .font(.largeTitle)
+                        .frame(width: 60, height: 60)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(30)
                 }
             }
-//        }
+            .padding(.horizontal)
+            .padding(.bottom)
+            
+            // Larger Lineups button
+            NavigationLink(
+                destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, quarter: currentQuarter,
+                                         gameDocumentName: gameDocumentName,
+                                         homeInTheGame: $homeInTheGame, homeBench: $homeBench,
+                                         awayInTheGame: $awayInTheGame, awayBench: $awayBench)
+                .environmentObject(firebaseManager)
+            ) {
+                Text("Lineups")
+                    .font(.title)
+                    .padding()
+                    .frame(maxWidth: .infinity, minHeight: 100)
+                    .background(Color.gray.opacity(0.2))
+                    .foregroundColor(.primary)
+                    .cornerRadius(15)
+                    .padding(.horizontal)
+            }
+            
+            // TODO: if lineups arent set, then make this button gray
+            NavigationLink(destination: SelectStatView(
+                gameDocumentName: gameDocumentName,
+                quarter: currentQuarter,
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                homeInTheGame: homeInTheGame,
+                awayInTheGame: awayInTheGame
+            )
+                .environmentObject(firebaseManager)
+            ) {
+                Text("Stat")
+                    .font(.title)
+                    .padding()
+                    .frame(maxWidth: .infinity, minHeight: 100)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            // Finish Game button remains at the bottom
+            Button(action: {
+                showingAlert = true
+            }) {
+                Text("Finish Game")
+                    .font(.title)
+                    .padding()
+                    .frame(maxWidth: .infinity, minHeight: 60)
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(15)
+            }
+            .padding()
+            .alert(isPresented: $showingAlert) {
+                Alert(
+                    title: Text("Are you sure you want to finish the game?"),
+                    primaryButton: .destructive(Text("Finish")) {
+                        navigateToFinishedGameStats = true
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            .navigationDestination(isPresented: $navigateToFinishedGameStats) {
+                FinishedGameStatsView()
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            if !hasAppeared {
+                hasAppeared = true // Set this to true so it only runs once
+                
+                //                    Task {
+                //                        do {
+                //                            gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameDocumentName)
+                //                        } catch {
+                //
+                //                        }
+                //                    }
+                homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
+                awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
+                
+            }
+        }
     }
 }
 
@@ -220,19 +185,6 @@ struct GameView_Previews: PreviewProvider {
                      gameDocumentName: "Stanford_vs_UCLA_2024-08-31_1725080445")
             .environmentObject(firebaseManager)
         }
-        
-//        .onAppear {
-//            Task {
-//                do {
-//                    try await firebaseManager.fetchRosters()
-//                    print("fetched rosters")
-//                    
-//                    
-//                } catch {
-//                    
-//                }
-//            }
-//        }
     }
 }
 
