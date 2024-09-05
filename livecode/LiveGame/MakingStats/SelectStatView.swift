@@ -40,16 +40,6 @@ struct SelectStatView: View {
                         homeInTheGame: homeInTheGame,
                         awayInTheGame: awayInTheGame
                     ).environmentObject(firebaseManager)
-//                                    ShotView(
-//                        gameDocumentName: gameDocumentName,
-//                        quarter: quarter,
-//                        homeTeam: homeTeam,
-//                        awayTeam: awayTeam,
-//                        homeInTheGame: homeInTheGame,
-//                        awayInTheGame: awayInTheGame,
-//                        navigationPath: $navigationPath
-//                    )
-                                   
                     ) {
                         StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
                     }
@@ -95,16 +85,11 @@ struct SelectStatView: View {
                     )) {
                         StatButton(label: "Timeout", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "timer")
                     }
-                    
-                    
                 }
                 .padding()
-                
-                
             }
             Spacer()
         }
-//        }
     }
 }
 

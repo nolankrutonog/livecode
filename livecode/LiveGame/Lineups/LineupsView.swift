@@ -36,7 +36,6 @@ struct LineupsView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedTab: Int = 0
-    @State private var isSevenOnSix: Bool = false;
     
     @State private var showingDoneAlert = false
     @State private var doneAlertMessage = ""
@@ -78,16 +77,16 @@ struct LineupsView: View {
                 }
             }
             .padding(.horizontal)
-            Picker("7v6", selection: $isSevenOnSix) {
-                Text("Regular").tag(false)
-                Text("7v6").tag(true)
-            }
+//            Picker("7v6", selection: $isSevenOnSix) {
+//                Text("Regular").tag(false)
+//                Text("7v6").tag(true)
+//            }
             
             // Content View
             if selectedTab == 0 {
-                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench, isSevenOnSix: $isSevenOnSix)
+                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench)
             } else {
-                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench, isSevenOnSix: $isSevenOnSix)
+                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench)
             }
             
             Spacer()
@@ -155,17 +154,23 @@ struct LineupsView: View {
     private func checkLineupsBeforeDone() {
         var problems = [String]()
         
-        if homeInTheGame.goalies.isEmpty {
-            problems.append("\(homeTeam) doesn't have a goalie")
+        if homeInTheGame.field.count != 7 {
+            if homeInTheGame.goalies.isEmpty {
+                problems.append("\(homeTeam) doesn't have a goalie")
+            }
+            if homeInTheGame.field.count != 6 {
+                problems.append("\(homeTeam) only has \(homeInTheGame.field.count) players in")
+            }
         }
-        if homeInTheGame.field.count != 6 {
-            problems.append("\(homeTeam) only has \(homeInTheGame.field.count) players in")
-        }
-        if awayInTheGame.goalies.isEmpty {
-            problems.append("\(awayTeam) doesn't have a goalie")
-        }
-        if awayInTheGame.field.count != 6 {
-            problems.append("\(awayTeam) only has \(awayInTheGame.field.count) players in")
+        
+        if awayInTheGame.field.count != 7 {
+            if awayInTheGame.goalies.isEmpty {
+                problems.append("\(awayTeam) doesn't have a goalie")
+            }
+            if awayInTheGame.field.count != 6 {
+                problems.append("\(awayTeam) only has \(awayInTheGame.field.count) players in")
+            }
+
         }
         
         if problems.isEmpty {

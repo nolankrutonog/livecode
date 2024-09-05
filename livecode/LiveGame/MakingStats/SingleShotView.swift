@@ -36,6 +36,9 @@ struct SingleShotView: View {
     @State private var fieldBlockedBy: String = ""
     @State private var savedBy: String = ""
     
+    @State private var is7v6: Bool = false
+    @State private var goalie: String = ""
+    
     init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
         self.gameDocumentName = gameDocumentName
         self.quarter = quarter
@@ -58,14 +61,13 @@ struct SingleShotView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     
-                    let offense = selectedTeam == homeTeam ? homeInTheGame.field + homeInTheGame.goalies : awayInTheGame.field + awayInTheGame.goalies
-                    
+//                    let offense = selectedTeam == homeTeam ? homeInTheGame.field + homeInTheGame.goalies : awayInTheGame.field + awayInTheGame.goalies
+                    let offense = selectedTeam == homeTeam ? homeInTheGame : awayInTheGame
                     // defense doesnt include goalies
-                    let defense = selectedTeam != homeTeam ? homeInTheGame.field : awayInTheGame.field
-                    
+                    let defense = selectedTeam != homeTeam ? homeInTheGame : awayInTheGame
                     Picker("Shooter", selection: $shooter) {
                         Text("").tag("")
-                        ForEach(offense, id: \.self) { player in
+                        ForEach(offense.field + offense.goalies, id: \.self) { player in
                             Text(player).tag(player)
                         }
                     }
@@ -139,8 +141,10 @@ struct SingleShotView: View {
                         Picker("Assisted by", selection: $assistedBy) {
                             Text("").tag("")
                             Text("None").tag("None")
-                            ForEach(offense, id: \.self) { player in
-                                Text(player).tag(player)
+                            ForEach(offense.field + offense.goalies, id: \.self) { player in
+                                if player != shooter {
+                                    Text(player).tag(player)
+                                }
                             }
                         }
                         //                    Picker("Goal conceded by", selection: $goalConcededBy) {
@@ -151,7 +155,7 @@ struct SingleShotView: View {
                     } else if shotResult == ShotKeys.shotResults.fieldBlock {
                         Picker("Field blocked by", selection: $fieldBlockedBy) {
                             Text("").tag("")
-                            ForEach(defense, id: \.self) { defender in
+                            ForEach(defense.field, id: \.self) { defender in
                                 Text(defender).tag(defender)
                             }
                         }
@@ -159,6 +163,20 @@ struct SingleShotView: View {
                     //                else if shotResult == ShotKeys.shotResults.goalieSave {
                     //                    $savedBy = selectedTeam == homeTeam ? awayInTheGame.goalies[0] : homeInTheGame.goalies[0]
                     //                }
+                    if defense.goalies.count == 0 {
+                        // 7v6 situation
+//                        is7v6 = .constant(true)
+                        Picker("Goalie", selection: $goalie) {
+                            Text("").tag("")
+                            ForEach(defense.field, id: \.self) { player in
+                                Text(player).tag(player)
+                            }
+                        }
+                        .onAppear {
+                            is7v6 = !is7v6
+                        }
+                    }
+                    
                 }
             }
             Button(action: {
@@ -170,17 +188,32 @@ struct SingleShotView: View {
                         shotDetail = ""
                     }
                     
-                    if shotResult != ShotKeys.shotResults.goal {
-                        assistedBy = ""
-                    }
-                    if shotResult != ShotKeys.shotResults.fieldBlock {
-                        fieldBlockedBy = ""
+//                    let possibleGoalie = goalie.isEmpty
+//                            ? selectedTeam == homeTeam ? awayInTheGame.goalies.first : homeInTheGame.goalies.first
+//                            : goalie
+                    
+                    if !is7v6 {
+                        // TODO: if there's no goalie in the lineup and not 7v6... need to error check with do try catch block?
+                        goalie = (selectedTeam == homeTeam ? awayInTheGame.goalies.first : homeInTheGame.goalies.first) ?? ""
                     }
                     
-                    let goalie = selectedTeam == homeTeam ? awayInTheGame.goalies[0] : homeInTheGame.goalies[0]
                     if shotResult == ShotKeys.shotResults.goal {
+                        fieldBlockedBy = ""
+                        savedBy = ""
                         goalConcededBy = goalie
+                    } else if shotResult == ShotKeys.shotResults.fieldBlock {
+                        savedBy = ""
+                        assistedBy = ""
+                        goalConcededBy = ""
+                    } else if shotResult == ShotKeys.shotResults.miss {
+                        savedBy = ""
+                        assistedBy = ""
+                        goalConcededBy = ""
+                        fieldBlockedBy = ""
                     } else if shotResult == ShotKeys.shotResults.goalieSave {
+                        assistedBy = ""
+                        goalConcededBy = ""
+                        fieldBlockedBy = ""
                         savedBy = goalie
                     }
                 }
@@ -247,25 +280,56 @@ struct SingleShotView: View {
     }
     
     private func canSubmit() -> Bool {
-        let constants = !shooter.isEmpty && !phaseOfGame.isEmpty
-        && !shotLocation.isEmpty && !shotResult.isEmpty
+        if shooter.isEmpty 
+            || phaseOfGame.isEmpty
+            || shotLocation.isEmpty
+            || shotResult.isEmpty {
+            return false
+        }
         
-        var others: Bool = false
         if phaseOfGame != ShotKeys.phases.penalty {
-            others = !shooterPosition.isEmpty && !shotDetail.isEmpty
-        } else {
-            others = true
+            if shooterPosition.isEmpty || shotDetail.isEmpty {
+                return false
+            }
         }
         
-        if shotResult == ShotKeys.shotResults.goal {
-            others = others && !assistedBy.isEmpty
+        
+        if shotResult == ShotKeys.shotResults.goal && assistedBy.isEmpty {
+            return false
         }
         
-        if shotResult == ShotKeys.shotResults.fieldBlock {
-            others = others && !fieldBlockedBy.isEmpty
+        if shotResult == ShotKeys.shotResults.fieldBlock && fieldBlockedBy.isEmpty {
+            return false
         }
-
-        return constants && others
+        
+        // miss has no additional check
+        
+        // goalie only if we are 7v6
+        if is7v6 && goalie.isEmpty{
+            return false
+        }
+        
+        return true
+        
+//        let constants = !shooter.isEmpty && !phaseOfGame.isEmpty
+//        && !shotLocation.isEmpty && !shotResult.isEmpty
+//        
+//        var others: Bool = false
+//        if phaseOfGame != ShotKeys.phases.penalty {
+//            others = !shooterPosition.isEmpty && !shotDetail.isEmpty
+//        } else {
+//            others = true
+//        }
+//        
+//        if shotResult == ShotKeys.shotResults.goal {
+//            others = others && !assistedBy.isEmpty
+//        }
+//        
+//        if shotResult == ShotKeys.shotResults.fieldBlock {
+//            others = others && !fieldBlockedBy.isEmpty
+//        }
+//
+//        return constants && others
     }
 }
 
@@ -274,7 +338,12 @@ struct SingleShotView_Preview: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            SingleShotView(gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", quarter: 1, homeTeam: "Stanford", awayTeam: "UCLA", homeInTheGame: stanfordInTheGame, awayInTheGame: uclaInTheGame)
+            SingleShotView(gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", 
+                           quarter: 1,
+                           homeTeam: "Stanford",
+                           awayTeam: "UCLA",
+                           homeInTheGame: stanford7v6,
+                           awayInTheGame: uclaInTheGame)
                 .environmentObject(FirebaseManager())
         }
     }

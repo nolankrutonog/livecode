@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
+//import FirebaseFirestore
 
 struct GameView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     @State private var path = NavigationPath()
+    
+    
     
     let homeTeam: String
     let awayTeam: String
@@ -159,18 +162,39 @@ struct GameView: View {
             if !hasAppeared {
                 hasAppeared = true // Set this to true so it only runs once
                 
-                //                    Task {
-                //                        do {
-                //                            gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameDocumentName)
-                //                        } catch {
-                //
-                //                        }
-                //                    }
                 homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
                 awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
                 
+                // TODO: comment when done testing
+                homeBench = stanfordFullRoster
+                awayBench = uclaFullRoster
+                
+                firebaseManager.addLineupListener(gameDocumentName: gameDocumentName)
+                
             }
         }
+        .onChange(of: firebaseManager.currentLineup) {
+            updateLineups(firebaseManager.currentLineup)
+        }
+    }
+    
+    
+    private func updateLineups(_ newLineup: [String: Lineup]) {
+        // Move players from in the game to the bench
+        homeBench.field.append(contentsOf: homeInTheGame.field)
+        homeBench.goalies.append(contentsOf: homeInTheGame.goalies)
+        awayBench.field.append(contentsOf: awayInTheGame.field)
+        awayBench.goalies.append(contentsOf: awayInTheGame.goalies)
+        
+        // Update in the game lineups
+        homeInTheGame = newLineup[LineupKeys.homeTeam] ?? Lineup()
+        awayInTheGame = newLineup[LineupKeys.awayTeam] ?? Lineup()
+        
+        // Remove in the game players from the benches
+        homeBench.field.removeAll { homeInTheGame.field.contains($0) }
+        homeBench.goalies.removeAll { homeInTheGame.goalies.contains($0) }
+        awayBench.field.removeAll { awayInTheGame.field.contains($0) }
+        awayBench.goalies.removeAll { awayInTheGame.goalies.contains($0) }
     }
 }
 
@@ -182,7 +206,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameDocumentName: "Stanford_vs_UCLA_2024-08-31_1725080445")
+                     gameDocumentName: "Stanford_vs_UCLA_2024-09-04_1725473661")
             .environmentObject(firebaseManager)
         }
     }

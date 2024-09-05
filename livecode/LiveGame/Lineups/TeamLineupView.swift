@@ -11,19 +11,22 @@ struct TeamLineupView: View {
     let teamName: String
     @Binding var inTheGame: Lineup
     @Binding var bench: Lineup
-    @Binding private var isSevenOnSix: Bool
+    @State private var is7v6: Bool = false
     
-    @State private var fullInTheGame: [String]
-    @State private var fullBench: [String]
+//    @State private var fullInTheGame: [String]
+//    @State private var fullBench: [String]
     
-    init(teamName: String, inTheGame: Binding<Lineup>, bench: Binding<Lineup>, isSevenOnSix: Binding<Bool>) {
+    init(teamName: String, inTheGame: Binding<Lineup>, bench: Binding<Lineup>) {
         self.teamName = teamName
         self._inTheGame = inTheGame
         self._bench = bench
-        self._isSevenOnSix = isSevenOnSix
+//        self._isSevenOnSix = isSevenOnSix
         
-        _fullInTheGame = State(initialValue: inTheGame.wrappedValue.goalies + inTheGame.wrappedValue.field)
-        _fullBench = State(initialValue: bench.wrappedValue.goalies + bench.wrappedValue.field)
+//        _fullInTheGame = State(initialValue: inTheGame.wrappedValue.goalies + inTheGame.wrappedValue.field)
+//        _fullBench = State(initialValue: bench.wrappedValue.goalies + bench.wrappedValue.field)
+        if inTheGame.field.count == 7 {
+            is7v6 = true
+        }
     }
 
     let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
@@ -33,11 +36,11 @@ struct TeamLineupView: View {
 
     var body: some View {
         VStack {
-//            Picker("7v6", selection: $isSevenOnSix) {
-//                Text("Regular").tag(false)
-//                Text("7v6").tag(true)
-//            }
-            if !isSevenOnSix {
+            Picker("7v6", selection: $is7v6) {
+                Text("Regular").tag(false)
+                Text("7v6").tag(true)
+            }
+            if !is7v6 {
                 regularView()
             } else {
                 sevenOnSixView()
@@ -46,37 +49,9 @@ struct TeamLineupView: View {
         }
     }
     
-//    private func sevenOnSixInGame() -> some View {
-//        ForEach(inTheGame.goalies + inTheGame.field, id: \.self) { player in
-//            Button(action: {
-//                // going to bench
-//                if let index = inTheGame.field.firstIndex(of: player) {
-//                    inTheGame.field.remove(at: index)
-//                    bench.field.insert(player, at: 0)
-//                } else if let index = inTheGame.goalie.firstIndex(of: player) {
-//                    inTheGame.goalies.remove(at: index)
-//                    bench.goalies.insert(player, at: 0)
-//                }
-//            }) {
-//                Text(abbreviateName(player))
-//                    .font(.system(size: 12, weight: .medium))
-//                    .lineLimit(1)
-//                    .truncationMode(.tail)
-//                    .padding()
-//                    .frame(width: buttonWidth, height: buttonHeight)
-//                    .background(Color.blue)
-//                    .foregroundColor(.white)
-//                    .cornerRadius(20)
-//                    .overlay(
-//                        RoundedRectangle(cornerRadius: 20)
-//                            .stroke(Color.white, lineWidth: 1)
-//                    )
-//            }
-//        }
-//    }
-    
     private func sevenOnSixView() -> some View {
-        VStack {
+        
+        return VStack {
             HStack {
                 Text("7v6")
                     .font(.title)
@@ -85,17 +60,17 @@ struct TeamLineupView: View {
             }
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 10) {
-//                    sevenOnSixInGame()
-                    ForEach(inTheGame.goalies + inTheGame.field, id: \.self) { player in
+                    ForEach(inTheGame.field, id: \.self) { player in
                         Button(action: {
                             // going to bench
                             if let index = inTheGame.field.firstIndex(of: player) {
                                 inTheGame.field.remove(at: index)
                                 bench.field.insert(player, at: 0)
-                            } else if let index = inTheGame.goalie.firstIndex(of: player) {
-                                inTheGame.goalies.remove(at: index)
-                                bench.goalies.insert(player, at: 0)
-                            }
+                            } 
+//                            else if let index = inTheGame.goalies.firstIndex(of: player) {
+//                                inTheGame.goalies.remove(at: index)
+//                                bench.goalies.insert(player, at: 0)
+//                            }
                         }) {
                             Text(abbreviateName(player))
                                 .font(.system(size: 12, weight: .medium))
@@ -112,23 +87,26 @@ struct TeamLineupView: View {
                                 )
                         }
                     }
-                    ForEach(bench.goalies + bench.field, id: \.self) { player in
+                    
+                    ForEach(bench.field, id: \.self) { player in
                         Button(action: {
                             // going in the game
                             let numInGame = inTheGame.field.count + inTheGame.goalies.count
                             if numInGame < 7 {
                                 if let index = bench.field.firstIndex(of: player) {
                                     bench.field.remove(at: index)
-                                } else if let index = bench.goalies.firstIndex(of: player) {
-                                    bench.goalies.remove(at: index)
-                                }
-                                
-                                let hasGoalie = inTheGame.goalies.count == 1 ? true : false
-                                if hasGoalie {
-                                    inTheGame.field.append(player)
-                                } else {
-                                    inTheGame.goalies.append(player)
-                                }
+                                } 
+//                                else if let index = bench.goalies.firstIndex(of: player) {
+//                                    bench.goalies.remove(at: index)
+//                                }
+                                inTheGame.field.append(player)
+
+//                                let hasGoalie = inTheGame.goalies.count == 1 ? true : false
+//                                if hasGoalie {
+//                                    inTheGame.field.append(player)
+//                                } else {
+//                                    inTheGame.goalies.append(player)
+//                                }
                             }
                         }) {
                             Text(abbreviateName(player))
@@ -150,10 +128,33 @@ struct TeamLineupView: View {
             }
         }
         .padding()
+        .onAppear {
+            // move all goalies to bench
+            for goalie in inTheGame.goalies {
+                if let index = inTheGame.goalies.firstIndex(of: goalie) {
+                    inTheGame.goalies.remove(at: index)
+                    bench.goalies.append(goalie)
+                }
+            }
+        }
     }
     
+//    private func sevenOnSixView2() -> some View {
+//        
+//        return VStack {
+//            HStack {
+//                Text("7v6")
+//                    .font(.title)
+//                    .bold()
+//                Spacer()
+//            }
+//            
+//            
+//        }
+//    }
+    
     private func regularView() -> some View {
-        VStack {
+        return VStack {
             HStack {
                 Text("Goalie")
                     .font(.title)
@@ -318,7 +319,7 @@ struct TeamLineupContainerView: View {
     let teamName: String
     
     var body: some View {
-        TeamLineupView(teamName: teamName, inTheGame: $inTheGame, bench: $bench, isSevenOnSix: $isSevens)
+        TeamLineupView(teamName: teamName, inTheGame: $inTheGame, bench: $bench)
     }
 }
 

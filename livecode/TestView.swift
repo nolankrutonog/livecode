@@ -109,6 +109,11 @@ var stanfordInTheGame = Lineup(
     field: ["Alex Gheorghe", "Ethan Parrish", "Riley Pittman", "CJ Indart", "Dash McFarland", "Chase McFarland"]
 )
 
+var stanford7v6 = Lineup(
+    goalies: [],
+    field: ["Alex Gheorghe", "Ethan Parrish", "Riley Pittman", "CJ Indart", "Dash McFarland", "Chase McFarland", "Ben Forer"]
+)
+
 var stanfordBench = Lineup(
     goalies: ["Griffen Price", "Harrison Rohlen"],
     field: ["Grant Watson", "Jack Merrill", "Daniel Mnatsakanian", "Botond Balogh", "Gavin West", "Christopher Arakelian", "Soren Jensen", "Jackson Painter", "Max Zelikov", "Ryan Ohl", "Guido Leonardi", "Konstantinos Mathiopoulos", "Orestis Zervoudakis", "Tanner Pulice", "Will Schneider", "Ben Forer"]

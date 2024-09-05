@@ -9,20 +9,59 @@ import Firebase
 
 
 class FirebaseManager: ObservableObject {
+    // rosters is <team_name> : <entire roster> as bench lineup
     @Published var rosters: [String: Lineup] = [:]
+    
+    // currentLineup is <team_name> : <most recent lineup choice>
+    @Published var currentLineup: [String: Lineup] = [:]
     let db = Firestore.firestore()
     private var isFetched: Bool = false
     
-//    init() {
-//        Task {
-//            do {
-//                try await fetchRosters()
-//            } catch {
-//                print("Error fetching rosters: \(error.localizedDescription)")
-//            }
-//        }
-//    }
-    
+    func addLineupListener(gameDocumentName: String) {
+        db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
+            guard let game = gameSnapshot else {
+                print("Error listening to game \(gameDocumentName): \(String(describing: error))")
+                return
+            }
+
+            if let data = game.data() {
+                let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
+                    guard let intKey = Int(key), let valueMap = value as? [String: Any] else {
+                        return nil
+                    }
+                    return (intKey, valueMap)
+                }
+                .sorted(by: { $0.0 > $1.0 })
+                
+                if let lastInstance = sortedData.first {
+                    let lastEntry = lastInstance.1  // The dictionary [String: Any]
+                    
+                    if let lineupStat = lastEntry[StatType.lineup] as? [String: Any] {
+                        if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
+                           let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
+                           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
+                            
+                            let homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+                            DispatchQueue.main.async {
+                                self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
+                            }
+                        }
+                        
+                        if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
+                           let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
+                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] 
+                        {
+                            let awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+                            DispatchQueue.main.async {
+                                self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
+    }
     
     func toTimeElapsed(timeString: String, quarter: Int) -> Int {
         guard timeString.contains(":") else { return 0 }
