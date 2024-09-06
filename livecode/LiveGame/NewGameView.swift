@@ -85,7 +85,6 @@ struct NewGameView: View {
                     if isFormValid {
                         Task {
                             do {
-//                                try await firebaseManager.fetchRosters()
                                 gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
                                 navigateToGame = true
                             } catch {

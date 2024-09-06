@@ -19,6 +19,7 @@ struct TimeoutView: View {
     
     @State private var timeString: String = ""
     @State private var selectedTeam: String = ""
+    @State private var timeoutType: String = ""
     @State private var isTimePickerPresented = false
     
     init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String) {
@@ -36,9 +37,17 @@ struct TimeoutView: View {
                     Text(homeTeam).tag(homeTeam)
                     Text(awayTeam).tag(awayTeam)
                 }
-                .pickerStyle(SegmentedPickerStyle())
+//                .pickerStyle(SegmentedPickerStyle())
                 .font(.title2)
                 .padding(.vertical, 10)
+                
+                Picker("Type", selection: $timeoutType) {
+                    Text("").tag("")
+                    Text("Full").tag(TimeoutKeys.full)
+                    Text("Half").tag(TimeoutKeys.half)
+                }
+                .font(.title2)
+                .padding(.vertical)
             }
         }
         .navigationTitle("Timeout")
@@ -48,11 +57,12 @@ struct TimeoutView: View {
                     presentationMode.wrappedValue.dismiss()
                 }
             }
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Done") {
 //                    presentationMode.wrappedValue.dismiss()
                     isTimePickerPresented = true
                 }
+                .disabled(!canSubmit())
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -67,7 +77,8 @@ struct TimeoutView: View {
                                 gameDocumentName: gameDocumentName,
                                 quarter: quarter,
                                 timeString: timeString,
-                                selectedTeam: selectedTeam
+                                selectedTeam: selectedTeam,
+                                timeoutType: timeoutType
                             )
                         } catch {
                             print("Failed to create timout stat: \(error)")
@@ -80,6 +91,10 @@ struct TimeoutView: View {
                     self.isTimePickerPresented = false
                 })
         }
+    }
+    
+    private func canSubmit() -> Bool {
+        return !selectedTeam.isEmpty && !timeoutType.isEmpty
     }
 }
 

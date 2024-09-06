@@ -32,45 +32,32 @@ struct LiveCodeView: View {
 //                        MenuButton(title: "Edit Rosters", icon: "list.bullet")
 //                    }
 
-                    NavigationLink(destination: NewGameView()) {
-                        MenuButton(title: "Start New Game", icon: "plus.circle")
+                    NavigationLink(destination: NewGameView().environmentObject(firebaseManager)) {
+//                        MenuButton(title: "Start New Game", icon: "plus.circle.fill")
+                        MenuButton(title: "Stat New Game", icon: "note.text.badge.plus")
                     }
                     
-                    
-                    NavigationLink(destination: FollowLiveGameView()) {
-                        MenuButton(title: "Follow Live Game", icon: "play.circle")
+                    NavigationLink(destination: SelectLiveGameView(destinationGameView: true).environmentObject(firebaseManager)) {
+                        MenuButton(title: "Stat Live Game", icon: "note.text")
                     }
-                    
+                   
+                    NavigationLink(destination: SelectLiveGameView(destinationGameView: false).environmentObject(firebaseManager)) {
+                        MenuButton(title: "Follow Live Game", icon: "figure.waterpolo")
+                    }
 
-                    NavigationLink(destination: PreviousGamesView()) {
-                        MenuButton(title: "Previous Games", icon: "clock.arrow.circlepath")
+                    NavigationLink(destination: PreviousGamesView().environmentObject(firebaseManager)) {
+                        MenuButton(title: "Finished Games", icon: "clock.arrow.circlepath")
                     }
                     
                     Spacer()
                 }
                 .padding()
-                .toolbar {
-                    
-//                    ToolbarItem(placement: .navigationBarTrailing) {
-//                        NavigationLink(destination: EditRostersView()) {
-//                            Image(systemName: "list.triangle")
-//                        }
-//                    }
-                }
             }
         }
     }
-   
 }
 
 
-struct FollowLiveGameView: View {
-    var body: some View {
-        VStack {
-            
-        }
-    }
-}
 
 struct MenuButton: View {
     let title: String
@@ -83,11 +70,29 @@ struct MenuButton: View {
             Text(title)
                 .font(.title)
         }
-        .frame(maxWidth: .infinity, maxHeight: 150)
+        .frame(maxWidth: .infinity, maxHeight: 100)
         .padding()
         .background(Color.black.opacity(0.1)) // Light black background for buttons
         .foregroundColor(.black) // Black font color for button text
         .cornerRadius(15)
+    }
+}
+
+
+struct StatLiveGame: View {
+    var body: some View {
+        VStack {
+            
+        }
+    }
+}
+
+
+struct FollowLiveGameView: View {
+    var body: some View {
+        VStack {
+            
+        }
     }
 }
 

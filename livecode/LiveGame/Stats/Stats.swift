@@ -105,6 +105,8 @@ struct PhaseOfGameKeys {
 
 struct TimeoutKeys {
     static let team = "team"
+    static let full = "full"
+    static let half = "half"
 }
 
 

@@ -148,6 +148,13 @@ struct GameView: View {
                 Alert(
                     title: Text("Are you sure you want to finish the game?"),
                     primaryButton: .destructive(Text("Finish")) {
+                        Task {
+                            do {
+                                try await firebaseManager.setGameToFinished(gameDocumentName: gameDocumentName)
+                            } catch {
+                                print("Error: \(error.localizedDescription)")
+                            }
+                        }
                         navigateToFinishedGameStats = true
                     },
                     secondaryButton: .cancel()
@@ -178,7 +185,6 @@ struct GameView: View {
         }
     }
     
-    
     private func updateLineups(_ newLineup: [String: Lineup]) {
         // Move players from in the game to the bench
         homeBench.field.append(contentsOf: homeInTheGame.field)
@@ -206,7 +212,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameDocumentName: "Stanford_vs_UCLA_2024-09-04_1725473661")
+                     gameDocumentName: "Stanford_vs_UCLA_2024-09-06_1725597362")
             .environmentObject(firebaseManager)
         }
     }

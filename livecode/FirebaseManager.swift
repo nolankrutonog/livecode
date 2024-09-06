@@ -9,14 +9,107 @@ import Firebase
 
 
 class FirebaseManager: ObservableObject {
-    // rosters is <team_name> : <entire roster> as bench lineup
+    /*
+     * ROSTERS is a map of the rosters from Firebase. They map from team_name: String (document) to a roster: struct Lineup (field).
+     * The rosters should only be fetched once (upon creating a new game) and in future releases will be able to edit rosters in
+     * Firebase from the app.
+     * rosters is <team_name> : <entire roster> as bench lineup
+     */
     @Published var rosters: [String: Lineup] = [:]
-    
-    // currentLineup is <team_name> : <most recent lineup choice>
+    private var rostersAreFetched: Bool = false
+
+    /*
+     * CURRENT_LINEUP is the current in-the-game players on both teams. The home team key is "home_team", found in LineupKeys.homeTeam,
+     * the same is true for the away team. CURRENT_LINEUP is set from the most recent lineup stat in Firebase of the current game. This
+     * requires that each device statting a game only has one live game at once. CURRENT_LINEUP is a published variable that is set
+     * every time a new lineup stat is added to a game in Firebase.
+     * currentLineup is <team_name> : <most recent lineup choice>
+     */
     @Published var currentLineup: [String: Lineup] = [:]
-    let db = Firestore.firestore()
-    private var isFetched: Bool = false
     
+    
+    /*
+     * GAME_DATA is a map of all the game events, most recent ones first. Each device can only follow one game at a time, so addGameListener()
+     * will add every stat to GAME_DATA only once. We are calling this populating. After GAME_DATA is fully populated, the published Bool
+     * GAME_IS_POPULATED will be set to true, and only the most recent stat will be appended to GAME_DATA. When a user decides to leave
+     * FollowGameView(), GAME_IS_POPULATED must be set to false and GAME_DATA emptied, so that the next game the user chooses to
+     * follow will be populated with the correct game data.
+     */
+    @Published var gameData: [(Int, [String: Any])] = []
+    @Published var gameIsPopulated: Bool = false
+    
+    let db = Firestore.firestore()
+    
+    
+    /* Listens to a live game and adds the most recent stat to gameData. If gameIsNotPopulated, it sets gameData to sortedData */
+    func addGameListener(gameDocumentName: String) {
+        db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
+            guard let game = gameSnapshot else {
+                print("Error listening to game \(gameDocumentName): \(String(describing: error))")
+                return
+            }
+            
+            if let data = game.data() {
+                let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
+                    guard let intKey = Int(key),
+                          let valueMap = value as? [String: Any] else {
+                        return nil
+                    }
+                    return (intKey, valueMap)
+                }
+                .sorted(by: { $0.0 > $1.0 })
+                
+                if !self.gameIsPopulated {
+                    self.gameIsPopulated = true
+                    DispatchQueue.main.async {
+                        self.gameData = sortedData
+                    }
+                } else {
+                    if let lastInstance = sortedData.first {
+                        DispatchQueue.main.async {
+                            self.gameData.insert(lastInstance, at: 0)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /* Returns a sorted list of Strings by creation date, where each String is a gameDocumentName*/
+    func fetchAllLiveGameNames() async throws -> [String] {
+        var gameNames: [String] = []
+        do {
+            let querySnapshot = try await db.collection("games")
+                .whereField("is_finished", in: [false])
+                .order(by: "timestamp", descending: true)
+                .getDocuments()
+            for gameDocument in querySnapshot.documents {
+                gameNames.append(gameDocument.documentID)
+            }
+        } catch {
+            print("Error getting live game names: \(error.localizedDescription)")
+        }
+        return gameNames
+    }
+    
+    func fetchAllFinishedGameNames() async throws -> [String] {
+        var gameNames: [String] = []
+        do {
+            let querySnapshot = try await db.collection("games")
+                .whereField("is_finished", in: [true])
+                .order(by: "timestamp", descending: true)
+                .getDocuments()
+            for gameDocument in querySnapshot.documents {
+                gameNames.append(gameDocument.documentID)
+            }
+        } catch {
+            print("Error getting finished game names: \(error.localizedDescription)")
+        }
+        return gameNames
+    }
+    
+    
+    /* Adds a listener to the document GAME_DOCUMENT_NAME in GameView to find the most recent lineup stat */
     func addLineupListener(gameDocumentName: String) {
         db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
             guard let game = gameSnapshot else {
@@ -33,10 +126,10 @@ class FirebaseManager: ObservableObject {
                 }
                 .sorted(by: { $0.0 > $1.0 })
                 
-                if let lastInstance = sortedData.first {
-                    let lastEntry = lastInstance.1  // The dictionary [String: Any]
+                for stat in sortedData {
+                    let entry = stat.1
                     
-                    if let lineupStat = lastEntry[StatType.lineup] as? [String: Any] {
+                    if let lineupStat = entry[StatType.lineup] as? [String: Any] {
                         if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
                            let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
                            let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
@@ -45,39 +138,50 @@ class FirebaseManager: ObservableObject {
                             DispatchQueue.main.async {
                                 self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
                             }
+                        } else {
+                            print("Error: lineup stat set incorrectly in cloud.")
                         }
                         
                         if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
                            let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
-                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] 
+                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String]
                         {
                             let awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
                             DispatchQueue.main.async {
                                 self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
                             }
+                        } else {
+                            print("Error: lineup stat set incorrectly in cloud.")
                         }
                         
+                        // Return if you found the most recent lineup stat
+                        return
                     }
                 }
             }
         }
     }
     
+    /* given a time string and the quarter, returns the amount of seconds passed in the game */
     func toTimeElapsed(timeString: String, quarter: Int) -> Int {
         guard timeString.contains(":") else { return 0 }
         
         let secondsInQuarter = 8 * 60
         
-        let minutes = timeString.split(separator: ":")[0]
-        let seconds = timeString.split(separator: ":")[1]
-            
-        return secondsInQuarter - (Int(minutes) ?? 0) * 60 + (Int(seconds) ?? 0) + (quarter - 1) * secondsInQuarter
+        let minutes = Int(timeString.split(separator: ":")[0]) ?? 0
+        let seconds = Int(timeString.split(separator: ":")[1]) ?? 0
+        
+        let timePassedInQuarter = secondsInQuarter - (minutes * 60 + seconds)
+        
+        let secondsOfPastQuarters = (quarter - 1) * secondsInQuarter
+        
+        return secondsOfPastQuarters + timePassedInQuarter
     }
 
     /* Populates rosters */
     func fetchRosters() async throws {
-        guard !isFetched else { return }
-        isFetched = true
+        guard !rostersAreFetched else { return }
+        rostersAreFetched = true
         
         do {
             let querySnapshot = try await db.collection("rosters").getDocuments()
@@ -113,13 +217,27 @@ class FirebaseManager: ObservableObject {
     func createGameDocument(gameName: String) async throws -> String {
         let newGameName = gameName + "_" + String(Int(Date().timeIntervalSince1970))
         do {
+            var gameData: [String: Any] = [:]
+            gameData["timestamp"] = FieldValue.serverTimestamp()
+            gameData["is_finished"] = false
             try await db.collection("games")
-                .document(newGameName).setData([:])
+                .document(newGameName).setData(gameData)
         } catch {
             print("Error creating game: \(gameName)")
             throw FirebaseError.gameCreationFailed(gameName: gameName)
         }
         return newGameName
+    }
+    
+    func setGameToFinished(gameDocumentName: String) async throws {
+        do {
+            try await db.collection("games")
+                .document(gameDocumentName)
+                .setData(["is_finished": true], merge: true)
+        } catch {
+            print("Error setting game to finished: \(gameDocumentName)")
+            throw FirebaseError.setGameToFinishedFailed
+        }
     }
     
     
@@ -225,7 +343,8 @@ class FirebaseManager: ObservableObject {
     }
     
     func createTimeoutStat(gameDocumentName: String, quarter: Int,
-                           timeString: String, selectedTeam: String
+                           timeString: String, selectedTeam: String,
+                           timeoutType: String
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let timeoutData: [String: Any] = [
@@ -301,6 +420,8 @@ enum FirebaseError: Error, LocalizedError {
     case stealStatCreationFailed(gameDocumentName: String)
     case timoutStatCreationFailed(gameDocumentName: String)
     case shotStatCreationFailed(gameDocumentName: String)
+    case fetchAllGamesFailed
+    case setGameToFinishedFailed
     case networkError
     
     var errorDescription: String? {
@@ -321,6 +442,10 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to upload timout stat to game \(gameDocumentName)"
         case .shotStatCreationFailed(let gameDocumentName):
             return "Failed to upload shot stat to game \(gameDocumentName)"
+        case .fetchAllGamesFailed:
+            return "Failed to fetch game names"
+        case .setGameToFinishedFailed:
+            return "Failed to set game to finished"
         case .networkError:
             return "Network error occurred. Please check your internet connection"
         }
