@@ -57,28 +57,28 @@ struct ExclusionView: View {
                 let otherPlayers = excludedTeam != homeTeam ? homeInTheGame.field + homeInTheGame.goalies : awayInTheGame.field + awayInTheGame.goalies
                 
                 Picker("Excluded player", selection: $excludedPlayer) {
+                    Text("").tag("")
                     ForEach(players, id: \.self) { player in
                         Text(player).tag(player)
                     }
                 }
                 
                 Picker("Excluded in", selection: $phaseOfGame) {
+                    Text("").tag("")
                     ForEach(PhaseOfGameKeys.defensePhases, id: \.self) { phase in
                         Text(phase).tag(phase)
                     }
-//                    Text(PhaseOfGameKeys.defensePhases)
                 }
                 
                 Picker("Exclusion type", selection: $exclusionType) {
-//                    ForEach(ExclusionKeys.exclusionTypes, id: \.self) { type in
-//                        Text(type).tag(type)
-//                    }
+                    Text("").tag("")
                     ForEach(Array(ExclusionKeys.toDisp), id: \.key) { key, value in
                         Text(value).tag(key)
                     }
                 }
                 
                 Picker("Drawn by", selection: $drawnBy) {
+                    Text("").tag("")
                     ForEach(otherPlayers, id: \.self) { player in
                         Text(player).tag(player)
                     }

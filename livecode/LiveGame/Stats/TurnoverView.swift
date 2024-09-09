@@ -20,6 +20,7 @@ struct TurnoverView: View {
     @State private var timeString: String = ""
     @State private var selectedTeam: String = ""
     @State private var selectedPlayer: String = ""
+    @State private var turnoverType: String = ""
     @State private var showingAlert = false
     @State private var isTimePickerPresented = false
     
@@ -37,6 +38,7 @@ struct TurnoverView: View {
         Form {
             teamSelectionSection
             playerSelectionSection
+            turnoverTypeSelection
         }
         .navigationTitle("Turnover")
         .navigationBarTitleDisplayMode(.inline)
@@ -60,7 +62,8 @@ struct TurnoverView: View {
                                 quarter: quarter, 
                                 timeString: timeString,
                                 team: selectedTeam,
-                                player: selectedPlayer
+                                player: selectedPlayer,
+                                turnoverType: turnoverType
                             )
                         } catch {
                            print("Failed to create turnover stat: \(error)")
@@ -94,6 +97,7 @@ struct TurnoverView: View {
     
     
     private var playerSelectionSection: some View {
+            
         Section(header: Text("Select Player")) {
             let players = selectedTeam == homeTeam ? homeInTheGame.goalies + homeInTheGame.field : awayInTheGame.goalies + awayInTheGame.field
             
@@ -119,6 +123,18 @@ struct TurnoverView: View {
         }
     }
     
+    private var turnoverTypeSelection: some View {
+        Section(header: Text("Turnover Type")) {
+            Picker("Turnover type", selection: $turnoverType) {
+                Text("").tag("")
+                ForEach(Array(TurnoverKeys.toDisp), id: \.key) { key, value in
+                    Text(value).tag(key)
+                }
+
+            }
+        }
+    }
+    
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button("Cancel") {
@@ -133,7 +149,7 @@ struct TurnoverView: View {
     
     private var doneButton: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
-            if !selectedTeam.isEmpty && !selectedPlayer.isEmpty {
+            if !selectedTeam.isEmpty && !selectedPlayer.isEmpty && !turnoverType.isEmpty {
                 Button("Done") {
                     isTimePickerPresented = true
                 }

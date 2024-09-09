@@ -1,5 +1,5 @@
 //
-//  SingleShotView.swift
+//  ShotSingleView.swift
 //  livecode
 //
 //  Created by Nolan Krutonog on 8/30/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SingleShotView: View {
+struct ShotSingleView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     @Environment(\.presentationMode) var presentationMode
     @State private var isTimePickerPresented = false
@@ -338,7 +338,7 @@ struct SingleShotView_Preview: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            SingleShotView(gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", 
+            ShotSingleView(gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", 
                            quarter: 1,
                            homeTeam: "Stanford",
                            awayTeam: "UCLA",

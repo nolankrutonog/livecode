@@ -56,13 +56,13 @@ struct SelectLiveGameView: View {
                 }
             }
         }
-        
+        .navigationTitle("Select Live Game")
         .navigationDestination(isPresented: $toDestination) {
             if destinationGameView {
                 GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameDocumentName: selectedGameDocumentName ?? "")
                     .environmentObject(firebaseManager)
             } else {
-                BoxScoreView()
+                BoxScoreView(gameDocumentName: selectedGameDocumentName ?? "")
                     .environmentObject(firebaseManager)
             }
         }
@@ -86,7 +86,7 @@ struct SelectLiveGameView: View {
 struct SelectLiveGame_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            SelectLiveGameView(destinationGameView: true)
+            SelectLiveGameView(destinationGameView: false)
                 .environmentObject(FirebaseManager())
         }
     }

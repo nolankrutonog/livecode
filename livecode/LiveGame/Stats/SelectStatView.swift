@@ -32,7 +32,7 @@ struct SelectStatView: View {
         VStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    NavigationLink(destination: SingleShotView(
+                    NavigationLink(destination: ShotSingleView(
                         gameDocumentName: gameDocumentName,
                         quarter: quarter,
                         homeTeam: homeTeam,

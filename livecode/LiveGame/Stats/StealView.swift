@@ -35,8 +35,8 @@ struct StealView: View {
         self.homeInTheGame = homeInTheGame
         self.awayInTheGame = awayInTheGame
         _selectedTeam = State(initialValue: homeTeam)
-        _stolenBy = State(initialValue: homeInTheGame.field.first ?? "no_player")
-        _turnoverBy = State(initialValue: awayInTheGame.field.first ?? "no_player")
+//        _stolenBy = State(initialValue: homeInTheGame.field.first ?? "no_player")
+//        _turnoverBy = State(initialValue: awayInTheGame.field.first ?? "no_player")
     }
     
     var body: some View {
@@ -59,12 +59,14 @@ struct StealView: View {
                     : awayInTheGame.field + awayInTheGame.goalies
                     
                 Picker("Stolen by", selection: $stolenBy) {
+                    Text("").tag("")
                     ForEach(players, id: \.self) { player in
                         Text(player).tag(player)
                     }
                 }
                 
                 Picker("Turnover by", selection: $turnoverBy) {
+                    Text("").tag("")
                     ForEach(otherPlayers, id: \.self) { player in
                         Text(player).tag(player)
                     }
@@ -84,6 +86,7 @@ struct StealView: View {
                 Button("Done") {
                     isTimePickerPresented = true
                 }
+                .disabled(!canSubmit())
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -115,6 +118,9 @@ struct StealView: View {
                 }
             )
         }
+    }
+    private func canSubmit() -> Bool {
+        return !stolenBy.isEmpty && !turnoverBy.isEmpty
     }
 }
 

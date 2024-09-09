@@ -8,7 +8,303 @@
 import Firebase
 
 
+class GameData {
+    var homeTeam: String = ""
+    var awayTeam: String = ""
+    var homeInTheGame: Lineup = Lineup()
+    var awayInTheGame: Lineup = Lineup()
+    
+    /*
+     * if a user follows a game and requires all the stats, then isPopulated will
+     * be set to true after all the stats are updated in the gameData
+     */
+    var isPopulated: Bool = false
+    
+    var homeScore: Int = 0
+    var awayScore: Int = 0
+    var quarter: Int = 1 // updated on every new stat
+    var homeTimeoutsLeft: Float = 3.5
+    var awayTimeoutsLeft: Float = 3.5
+
+    var playByPlay: [(Int, String)] = []
+    
+    /*
+     * SECONDS_TRACKER is a map from <team> (home/awayTeam) to a map of players from <playerName>: <secondsPlayed>
+     */
+    var secondsTracker: [String: [String: Int]] = [:]
+    var prevTime: Int = 0
+    
+    
+    /* Updates the time that players are in the game */
+    private func updateSecondsTracker(gameTime: Int) {
+        for player: String in homeInTheGame.field + homeInTheGame.goalies + awayInTheGame.field + awayInTheGame.goalies {
+            if secondsTracker[LineupKeys.homeTeam]?[player] != nil {
+                /* if a player is defined already */
+                secondsTracker[LineupKeys.homeTeam]?[player]? += (gameTime - prevTime)
+            } else {
+                secondsTracker[LineupKeys.homeTeam]?[player] = 0
+            }
+        }
+        self.prevTime = gameTime
+    }
+    
+    private func handleLineupStat(lineupStat: [String: Any], gameTime: Int) {
+        if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
+           let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
+           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] 
+        {
+            self.homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+        }
+        
+        if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
+           let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
+           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String]
+        {
+            self.awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+        }
+
+    }
+    
+    struct Shot {
+        var gameTime: Int
+        var phaseOfGame: String
+        var shooterPosition: String?
+        var shotLocation: String
+        var shotDetail: String?
+        var isSkip: Bool
+        var shotResult: String
+        
+        var assistedBy: String?
+        var goalConcededBy: String?
+        var fieldBlockedBy: String?
+        var savedBy: String?
+    }
+    
+    var shotTracker: [String: [String: [Shot]]] = [:]
+    
+    private func handleShotStat(shotStat: [String: Any], gameTime: Int) {
+        print(shotStat)
+        guard let team = shotStat[ShotKeys.team] as? String,
+              let shooter = shotStat[ShotKeys.shooter] as? String,
+              let phaseOfGame = shotStat[ShotKeys.phaseOfGame] as? String,
+              let shotLocation = shotStat[ShotKeys.shotLocation] as? String,
+              let isSkip = shotStat[ShotKeys.isSkip] as? Bool,
+              let shotResult = shotStat[ShotKeys.shotResult] as? String else {
+            return
+        }
+        
+        var shooterPosition: String?
+        var shotDetail: String?
+        
+        if phaseOfGame != ShotKeys.phases.penalty {
+            guard let position = shotStat[ShotKeys.shooterPosition] as? String,
+                  let detail = shotStat[ShotKeys.shotDetail] as? String else {
+                return
+            }
+            shooterPosition = position
+            shotDetail = detail
+        }
+        
+        var assistedBy: String?
+        var goalConcededBy: String?
+        var savedBy: String?
+        var fieldBlockedBy: String?
+        
+        if shotResult == ShotKeys.shotResults.goal {
+            guard let assist = shotStat[ShotKeys.assistedBy] as? String,
+                  let concededBy = shotStat[ShotKeys.goalConcededBy] as? String else {
+                return
+            }
+            assistedBy = assist
+            goalConcededBy = concededBy
+        } else if shotResult == ShotKeys.shotResults.fieldBlock {
+            guard let fieldBlock = shotStat[ShotKeys.fieldBlockedBy] as? String else {
+                return
+            }
+            fieldBlockedBy = fieldBlock
+        } else if shotResult == ShotKeys.shotResults.goalieSave {
+            guard let save = shotStat[ShotKeys.savedBy] as? String else {
+                return
+            }
+            savedBy = save
+        }
+       
+        var shot = Shot(gameTime: gameTime, phaseOfGame: phaseOfGame, shotLocation: shotLocation, isSkip: isSkip, shotResult: shotResult)
+        shot.shooterPosition = shooterPosition
+        shot.shotDetail = shotDetail
+        shot.assistedBy = assistedBy
+        shot.goalConcededBy = goalConcededBy
+        shot.savedBy = savedBy
+        shot.fieldBlockedBy = fieldBlockedBy
+       
+        if team == homeTeam {
+            shotTracker[LineupKeys.homeTeam, default: [:]][shooter, default: []].append(shot)
+        } else if team == awayTeam {
+            shotTracker[LineupKeys.awayTeam, default: [:]][shooter, default: []].append(shot)
+        }
+        
+    }
+    
+    /* EXCLUSION_TRACKER is a map from <team> (home/awayTeam) to a map of players from <playerName>: [Exclusion] */
+    struct Exclusion {
+        var gameTime: Int
+        var exclusionType: String
+        var drawnBy: String
+        var phaseOfGame: String
+    }
+    var exclusionTracker: [String /* home/awayTeam */: [String /* playerName*/ : [Exclusion]]] = [:]
+    
+    private func handleExclusionStat(exclusionStat: [String: Any], gameTime: Int) {
+        guard let player = exclusionStat[ExclusionKeys.excludedPlayer] as? String,
+              let type = exclusionStat[ExclusionKeys.exclusionType] as? String,
+              let drawnBy = exclusionStat[ExclusionKeys.drawnBy] as? String,
+              let phase = exclusionStat[ExclusionKeys.phaseOfGame] as? String,
+              let excludedTeam = exclusionStat[ExclusionKeys.excludedTeam] as? String else {
+            return
+        }
+
+        let exclusion = Exclusion(gameTime: gameTime, exclusionType: type, drawnBy: drawnBy, phaseOfGame: phase)
+
+        if excludedTeam == homeTeam {
+            exclusionTracker[LineupKeys.homeTeam, default: [:]][player, default: []].append(exclusion)
+        } else if excludedTeam == awayTeam {
+            exclusionTracker[LineupKeys.awayTeam, default: [:]][player, default: []].append(exclusion)
+        }
+    }
+
+    
+    struct Steal {
+        var gameTime: Int
+        var stolenBy: String
+        var turnoverBy: String
+    }
+    
+    var stealTracker: [String: [Steal]] = [:]
+    
+    private func handleStealStat(stealStat: [String: Any], gameTime: Int) {
+        guard let stolenBy = stealStat[StealKeys.stolenBy] as? String,
+              let turnoverBy = stealStat[StealKeys.turnoverBy] as? String,
+              let team = stealStat[StealKeys.team] as? String else {
+            return
+        }
+        
+        let steal = Steal(gameTime: gameTime, stolenBy: stolenBy, turnoverBy: turnoverBy)
+        
+        if team == homeTeam {
+            stealTracker[LineupKeys.homeTeam, default: []].append(steal)
+        } else {
+            stealTracker[LineupKeys.awayTeam, default: []].append(steal)
+        }
+    }
+    
+    struct Turnover {
+        var gameTime: Int
+        var player: String
+        var turnoverType: String
+    }
+    var turnoverTracker: [String: [Turnover]] = [:]
+    
+    private func handleTurnoverStat(turnoverStat: [String: Any], gameTime: Int) {
+        guard let team = turnoverStat[TurnoverKeys.team] as? String,
+              let player = turnoverStat[TurnoverKeys.player] as? String,
+              let turnoverType = turnoverStat[TurnoverKeys.turnoverType] as? String else {
+            return
+        }
+        
+        let turnover = Turnover(gameTime: gameTime, player: player, turnoverType: turnoverType)
+        
+        if team == homeTeam {
+            turnoverTracker[LineupKeys.homeTeam, default: []].append(turnover)
+        } else if team == awayTeam {
+            turnoverTracker[LineupKeys.awayTeam, default: []].append(turnover)
+        }
+    }
+    
+    struct Timeout {
+        var gameTime: Int
+        var timeoutType: String
+    }
+    
+    var timeoutTracker: [String: [Timeout]] = [:]
+    
+    private func handleTimeoutStat(timeoutStat: [String: Any], gameTime: Int) {
+        guard let team = timeoutStat[TimeoutKeys.team] as? String,
+              let timeoutType = timeoutStat[TimeoutKeys.timeoutType] as? String else {
+            return
+        }
+        
+        let timeout = Timeout(gameTime: gameTime, timeoutType: timeoutType)
+        
+        if team == homeTeam {
+            timeoutTracker[LineupKeys.homeTeam, default: []].append(timeout)
+        } else if team == awayTeam {
+            timeoutTracker[LineupKeys.awayTeam, default: []].append(timeout)
+        }
+    }
+    
+    private func handleStat(stat: [String: Any], gameTime: Int) {
+        if let lineupStat = stat[StatType.lineup] as? [String: Any] {
+            handleLineupStat(lineupStat: lineupStat, gameTime: gameTime)
+        } else if let shotStat = stat[StatType.shot] as? [String: Any] {
+            handleShotStat(shotStat: shotStat, gameTime: gameTime)
+        } else if let exclusionStat = stat[StatType.exclusion] as? [String: Any] {
+            handleExclusionStat(exclusionStat: exclusionStat, gameTime: gameTime)
+        } else if let stealStat = stat[StatType.steal] as? [String: Any] {
+            handleStealStat(stealStat: stealStat, gameTime: gameTime)
+        } else if let turnoverStat = stat[StatType.turnover] as? [String: Any] {
+            handleTurnoverStat(turnoverStat: turnoverStat, gameTime: gameTime)
+        } else if let timeoutStat = stat[StatType.timeout] as? [String: Any] {
+            handleTimeoutStat(timeoutStat: timeoutStat, gameTime: gameTime)
+        }
+
+    }
+    
+    
+    /* This is the init function */
+    public func populate(data: [(Int, [String: Any])], homeTeam: String, awayTeam: String) {
+        self.homeTeam = homeTeam
+        self.awayTeam = awayTeam
+        
+        secondsTracker[LineupKeys.homeTeam] = [:]
+        secondsTracker[LineupKeys.awayTeam] = [:]
+        
+        exclusionTracker[LineupKeys.homeTeam] = [:]
+        exclusionTracker[LineupKeys.awayTeam] = [:]
+        
+        stealTracker[LineupKeys.homeTeam] = []
+        stealTracker[LineupKeys.awayTeam] = []
+        
+        shotTracker[LineupKeys.homeTeam] = [:]
+        shotTracker[LineupKeys.awayTeam] = [:]
+        
+        turnoverTracker[LineupKeys.homeTeam] = []
+        turnoverTracker[LineupKeys.awayTeam] = []
+        
+        timeoutTracker[LineupKeys.homeTeam] = []
+        timeoutTracker[LineupKeys.awayTeam] = []
+        
+        for entry in data {
+            let gameTime = Int(entry.0)
+            updateSecondsTracker(gameTime: gameTime)
+            let stat = entry.1
+            handleStat(stat: stat, gameTime: gameTime)
+        }
+        
+        self.isPopulated = true
+    }
+    
+    
+    public func addStat(stat: (Int, [String: Any])) {
+        let gameTime = Int(stat.0)
+        updateSecondsTracker(gameTime: gameTime)
+        handleStat(stat: stat.1, gameTime: gameTime)
+    }
+}
+
+
 class FirebaseManager: ObservableObject {
+    let db = Firestore.firestore()
+    
     /*
      * ROSTERS is a map of the rosters from Firebase. They map from team_name: String (document) to a roster: struct Lineup (field).
      * The rosters should only be fetched once (upon creating a new game) and in future releases will be able to edit rosters in
@@ -35,12 +331,11 @@ class FirebaseManager: ObservableObject {
      * FollowGameView(), GAME_IS_POPULATED must be set to false and GAME_DATA emptied, so that the next game the user chooses to
      * follow will be populated with the correct game data.
      */
-    @Published var gameData: [(Int, [String: Any])] = []
-    @Published var gameIsPopulated: Bool = false
+//    @Published var gameData: [(Int, [String: Any])] = []
+//    @Published var gameIsPopulated: Bool = false
+    @Published var gameData: GameData = GameData()
     
-    let db = Firestore.firestore()
-    
-    
+   
     /* Listens to a live game and adds the most recent stat to gameData. If gameIsNotPopulated, it sets gameData to sortedData */
     func addGameListener(gameDocumentName: String) {
         db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
@@ -50,32 +345,32 @@ class FirebaseManager: ObservableObject {
             }
             
             if let data = game.data() {
-                let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
-                    guard let intKey = Int(key),
-                          let valueMap = value as? [String: Any] else {
-                        return nil
-                    }
-                    return (intKey, valueMap)
-                }
-                .sorted(by: { $0.0 > $1.0 })
-                
-                if !self.gameIsPopulated {
-                    self.gameIsPopulated = true
-                    DispatchQueue.main.async {
-                        self.gameData = sortedData
-                    }
-                } else {
-                    if let lastInstance = sortedData.first {
-                        DispatchQueue.main.async {
-                            self.gameData.insert(lastInstance, at: 0)
+                if let homeTeam = data[LineupKeys.homeTeam] as? String,
+                   let awayTeam = data[LineupKeys.awayTeam] as? String {
+                    
+                    let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
+                        guard let intKey = Int(key),
+                              let valueMap = value as? [String: Any] else {
+                            return nil
                         }
+                        return (intKey, valueMap)
+                    }
+                    /* want this sorted from 0 to end so stats are added in order of when they occur */
+                        .sorted(by: { $0.0 < $1.0 })
+                    
+                    
+                    if !self.gameData.isPopulated {
+                        self.gameData.populate(data: sortedData, homeTeam: homeTeam, awayTeam: awayTeam)
+                    } else {
+                        // add most recent stat
+                        self.gameData.addStat(stat: sortedData[sortedData.count - 1])
                     }
                 }
             }
         }
     }
     
-    /* Returns a sorted list of Strings by creation date, where each String is a gameDocumentName*/
+    /* Returns a list of gameDocumentNames in sorted order by timestamp descending where "is_finished" flag is false */
     func fetchAllLiveGameNames() async throws -> [String] {
         var gameNames: [String] = []
         do {
@@ -92,6 +387,7 @@ class FirebaseManager: ObservableObject {
         return gameNames
     }
     
+    /* returns a list of gameDocumentNames where "is_finished" flag is true */
     func fetchAllFinishedGameNames() async throws -> [String] {
         var gameNames: [String] = []
         do {
@@ -110,34 +406,39 @@ class FirebaseManager: ObservableObject {
     
     
     /* Adds a listener to the document GAME_DOCUMENT_NAME in GameView to find the most recent lineup stat */
-    func addLineupListener(gameDocumentName: String) {
+    func addGameViewLineupListener(gameDocumentName: String) {
         db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
             guard let game = gameSnapshot else {
                 print("Error listening to game \(gameDocumentName): \(String(describing: error))")
                 return
             }
-
+            
             if let data = game.data() {
                 let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
                     guard let intKey = Int(key), let valueMap = value as? [String: Any] else {
+                        /* This also excludes metadata keys like "is_finished" and "timestamp" */
                         return nil
                     }
                     return (intKey, valueMap)
                 }
                 .sorted(by: { $0.0 > $1.0 })
                 
+                var homeInTheGame: Lineup = Lineup()
+                var awayInTheGame: Lineup = Lineup()
+                
                 for stat in sortedData {
-                    let entry = stat.1
+                    let entry = stat.1 // stat.0 is the timestamp
                     
                     if let lineupStat = entry[StatType.lineup] as? [String: Any] {
                         if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
                            let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
                            let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
                             
-                            let homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
-                            DispatchQueue.main.async {
-                                self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
-                            }
+//                            let homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+//                            DispatchQueue.main.async {
+//                                self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
+//                            }
+                            homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
                         } else {
                             print("Error: lineup stat set incorrectly in cloud.")
                         }
@@ -146,15 +447,20 @@ class FirebaseManager: ObservableObject {
                            let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
                            let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String]
                         {
-                            let awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
-                            DispatchQueue.main.async {
-                                self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
-                            }
+//                            let awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+//                            DispatchQueue.main.async {
+//                                self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
+//                            }
+                            awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
                         } else {
                             print("Error: lineup stat set incorrectly in cloud.")
                         }
                         
                         // Return if you found the most recent lineup stat
+                        DispatchQueue.main.async {
+                            self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
+                            self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
+                        }
                         return
                     }
                 }
@@ -214,12 +520,14 @@ class FirebaseManager: ObservableObject {
     }
     
     /* Creates a game document in Fireabse */
-    func createGameDocument(gameName: String) async throws -> String {
+    func createGameDocument(gameName: String, homeTeam: String, awayTeam: String) async throws -> String {
         let newGameName = gameName + "_" + String(Int(Date().timeIntervalSince1970))
         do {
             var gameData: [String: Any] = [:]
             gameData["timestamp"] = FieldValue.serverTimestamp()
             gameData["is_finished"] = false
+            gameData["home_team"] = homeTeam
+            gameData["away_team"] = awayTeam
             try await db.collection("games")
                 .document(newGameName).setData(gameData)
         } catch {
@@ -229,6 +537,8 @@ class FirebaseManager: ObservableObject {
         return newGameName
     }
     
+    
+    /* Sets GAME_DOCUMENT_NAME's "is_finished" to true in firebase */
     func setGameToFinished(gameDocumentName: String) async throws {
         do {
             try await db.collection("games")
@@ -243,7 +553,7 @@ class FirebaseManager: ObservableObject {
     
     /* creates a lineup stat in the given gameDocumentName */
     func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
-                          homeTeam: String, awayTeam: String,
+//                          homeTeam: String, awayTeam: String,
                            homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
         
         assert(!gameDocumentName.isEmpty)
@@ -251,8 +561,8 @@ class FirebaseManager: ObservableObject {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let lineupData: [String: Any] = [
             StatType.lineup: [
-                LineupKeys.homeTeam: homeTeam,
-                LineupKeys.awayTeam: awayTeam,
+//                LineupKeys.homeTeam: homeTeam,
+//                LineupKeys.awayTeam: awayTeam,
                 LineupKeys.homeInTheGame: [
                     LineupKeys.goalies: homeInTheGame.goalies,
                     LineupKeys.field: homeInTheGame.field
@@ -274,12 +584,13 @@ class FirebaseManager: ObservableObject {
     }
     
     /* Creates turnover stat in firebase */
-    func createTurnoverStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String) async throws {
+    func createTurnoverStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String, turnoverType: String) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let turnoverData: [String: Any] = [
             StatType.turnover: [
                 TurnoverKeys.team: team,
-                TurnoverKeys.player: player
+                TurnoverKeys.player: player,
+                TurnoverKeys.turnoverType: turnoverType
             ]
         ]
         
@@ -349,7 +660,8 @@ class FirebaseManager: ObservableObject {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let timeoutData: [String: Any] = [
             StatType.timeout: [
-                TimeoutKeys.team: selectedTeam
+                TimeoutKeys.team: selectedTeam,
+                TimeoutKeys.timeoutType: timeoutType
             ]
         ]
         

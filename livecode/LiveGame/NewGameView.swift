@@ -23,15 +23,16 @@ struct NewGameView: View {
     @State private var gameDocumentName: String = ""
     
     var generatedGameName: String {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withYear, .withMonth, .withDay, .withDashSeparatorInDate]
-        let dateString = dateFormatter.string(from: gameDate)
         
-        // Replace spaces with underscores or hyphens and remove special characters
         let sanitizedHomeTeam = homeTeam.replacingOccurrences(of: " ", with: "_").filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
         let sanitizedAwayTeam = awayTeam.replacingOccurrences(of: " ", with: "_").filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" }
         
-        return "\(sanitizedHomeTeam)_vs_\(sanitizedAwayTeam)_\(dateString)"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
+        let formattedDate = formatter.string(from: gameDate)
+
+        return "\(sanitizedHomeTeam)_vs_\(sanitizedAwayTeam)_\(formattedDate)"
     }
     
     var isFormValid: Bool {
@@ -85,7 +86,7 @@ struct NewGameView: View {
                     if isFormValid {
                         Task {
                             do {
-                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName)
+                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName, homeTeam: homeTeam, awayTeam: awayTeam)
                                 navigateToGame = true
                             } catch {
                                 print("Error creating game \(gameName)")

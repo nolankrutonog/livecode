@@ -134,8 +134,8 @@ struct LineupsView: View {
                             gameDocumentName: gameDocumentName,
                             quarter: quarter,
                             timeString: $timeString.wrappedValue,
-                            homeTeam: homeTeam,
-                            awayTeam: awayTeam,
+//                            homeTeam: homeTeam,
+//                            awayTeam: awayTeam,
                             homeInTheGame: $homeInTheGame.wrappedValue,
                             awayInTheGame: $awayInTheGame.wrappedValue
                         )

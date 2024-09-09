@@ -176,7 +176,7 @@ struct GameView: View {
                 homeBench = stanfordFullRoster
                 awayBench = uclaFullRoster
                 
-                firebaseManager.addLineupListener(gameDocumentName: gameDocumentName)
+                firebaseManager.addGameViewLineupListener(gameDocumentName: gameDocumentName)
                 
             }
         }
@@ -192,11 +192,11 @@ struct GameView: View {
         awayBench.field.append(contentsOf: awayInTheGame.field)
         awayBench.goalies.append(contentsOf: awayInTheGame.goalies)
         
-        // Update in the game lineups
+        // Update inTheGame lineups
         homeInTheGame = newLineup[LineupKeys.homeTeam] ?? Lineup()
         awayInTheGame = newLineup[LineupKeys.awayTeam] ?? Lineup()
         
-        // Remove in the game players from the benches
+        // Remove inTheGame players from the benches
         homeBench.field.removeAll { homeInTheGame.field.contains($0) }
         homeBench.goalies.removeAll { homeInTheGame.goalies.contains($0) }
         awayBench.field.removeAll { awayInTheGame.field.contains($0) }
@@ -212,7 +212,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameDocumentName: "Stanford_vs_UCLA_2024-09-06_1725597362")
+                     gameDocumentName: "Stanford_vs_UCLA_2024-09-06_1725658652")
             .environmentObject(firebaseManager)
         }
     }
