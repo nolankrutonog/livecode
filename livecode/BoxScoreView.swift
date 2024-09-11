@@ -12,7 +12,8 @@ struct BoxScoreView: View {
     @Environment(\.presentationMode) var presentationMode
 
     let gameDocumentName: String
-    @State private var gameData: [(Int, [String: Any])] = []
+//    @State private var gameData: [(Int, [String: Any])] = []
+//    @State private var gameData: GameData = G
     
     
     var body: some View {
@@ -24,6 +25,7 @@ struct BoxScoreView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
+                    firebaseManager.gameData.isPopulated = false
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     HStack(spacing: 2) {
@@ -37,10 +39,8 @@ struct BoxScoreView: View {
         .onAppear {
             firebaseManager.addGameListener(gameDocumentName: gameDocumentName)
         }
-//        .onChange(of: firebaseManager.gameData) {
-//            
-//        }
     }
+    
     
 //    private func updateGameData(_ newStat: (Int, [String: Any])) {
 //        self.gameData.append(newStat)

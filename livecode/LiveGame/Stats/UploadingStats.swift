@@ -6,7 +6,6 @@
 //
 
 
-//let statType: String = "stat_type"
 
 struct StatType {
     static let timeout = "timeout"
@@ -24,8 +23,8 @@ struct StealKeys {
 }
 
 struct LineupKeys {
-    static let homeTeam = "home_team"
-    static let awayTeam = "away_team"
+//    static let homeTeam = "home_team"
+//    static let awayTeam = "away_team"
     static let homeInTheGame = "home_in_the_game"
     static let awayInTheGame = "away_in_the_game"
     static let goalies = "goalies"
@@ -154,6 +153,13 @@ struct ShotKeys {
         static let transitionOffense = "Transition offense"
         static let penalty = "Penalty"
     }
+    
+    static let phasesToDisp: [String: String] = [
+        phases.frontCourtOffense: dispPhases.frontCourtOffense,
+        phases.sixOnFive: dispPhases.sixOnFive,
+        phases.transitionOffense: dispPhases.transitionOffense,
+        phases.penalty: dispPhases.penalty
+    ]
     
     struct fcoPositions {
         static let one = "1"

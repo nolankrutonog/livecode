@@ -43,6 +43,7 @@
 		413E79052C7BB3AF00A7CEEB /* StealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79042C7BB3AF00A7CEEB /* StealView.swift */; };
 		413E79072C7CEE6B00A7CEEB /* TimeoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79062C7CEE6B00A7CEEB /* TimeoutView.swift */; };
 		413E79092C7CF97A00A7CEEB /* ShotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79082C7CF97A00A7CEEB /* ShotView.swift */; };
+		413F883E2C912F630066DF21 /* GameData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413F883D2C912F630066DF21 /* GameData.swift */; };
 		4148EA652C72F2EE00494001 /* UploadingStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4148EA642C72F2EE00494001 /* UploadingStats.swift */; };
 		416822732C783AFB007E7190 /* EditRostersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416822722C783AFB007E7190 /* EditRostersView.swift */; };
 		4168A8362C7922FA00CFA510 /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A8352C7922FA00CFA510 /* FirebaseManager.swift */; };
@@ -94,6 +95,7 @@
 		413E79042C7BB3AF00A7CEEB /* StealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StealView.swift; sourceTree = "<group>"; };
 		413E79062C7CEE6B00A7CEEB /* TimeoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeoutView.swift; sourceTree = "<group>"; };
 		413E79082C7CF97A00A7CEEB /* ShotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotView.swift; sourceTree = "<group>"; };
+		413F883D2C912F630066DF21 /* GameData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameData.swift; sourceTree = "<group>"; };
 		4148EA642C72F2EE00494001 /* UploadingStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadingStats.swift; sourceTree = "<group>"; };
 		416822722C783AFB007E7190 /* EditRostersView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditRostersView.swift; sourceTree = "<group>"; };
 		4168A8352C7922FA00CFA510 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
@@ -240,6 +242,7 @@
 				4168A8352C7922FA00CFA510 /* FirebaseManager.swift */,
 				419122A52C8162ED0097379F /* AudioRecorder.swift */,
 				4112D2172C8B8DFA00CC9DAD /* BoxScoreView.swift */,
+				413F883D2C912F630066DF21 /* GameData.swift */,
 			);
 			path = livecode;
 			sourceTree = "<group>";
@@ -446,6 +449,7 @@
 				410A6C942C82B80700764F3E /* ShotSingleView.swift in Sources */,
 				411485162C72A81600006239 /* Constants.swift in Sources */,
 				411753512C73E375007B3717 /* FinishedGameStats.swift in Sources */,
+				413F883E2C912F630066DF21 /* GameData.swift in Sources */,
 				41BD4CF92C8A437B00E8E32D /* FollowLiveGameView.swift in Sources */,
 				412F0B952C7B1D2900EDE50F /* ExclusionView.swift in Sources */,
 				419122A62C8162ED0097379F /* AudioRecorder.swift in Sources */,
