@@ -300,6 +300,24 @@ class FirebaseManager: ObservableObject {
         }
     }
     
+    func fetchRosterNames() async throws -> [String] {
+        var rosterNames: [String] = []
+        do {
+            let snapshot = try await db.collection(rostersCollection)
+                .document(currentYear)
+                .getDocument()
+            
+            
+            if let data = snapshot.data() {
+                rosterNames = data.keys.map { $0 }
+            }
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+        return rosterNames
+    }
+    
     /* returns a Lineup() given the teamName */
     func getFullLineupOf(teamName: String) -> Lineup {
         return rosters[teamName] ?? Lineup()
