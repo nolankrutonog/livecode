@@ -10,15 +10,15 @@ import SwiftUI
 struct SelectStatView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
     let homeInTheGame: Lineup
     let awayInTheGame: Lineup
    
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
-        self.gameDocumentName = gameDocumentName
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -32,8 +32,8 @@ struct SelectStatView: View {
         VStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    NavigationLink(destination: ShotSingleView(
-                        gameDocumentName: gameDocumentName,
+                    NavigationLink(destination: CreateShotSingleView(
+                        gameCollectionName: gameCollectionName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
@@ -44,8 +44,8 @@ struct SelectStatView: View {
                         StatButton(label: "Shot", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "figure.waterpolo")
                     }
                     
-                    NavigationLink(destination: TurnoverView(
-                        gameDocumentName: gameDocumentName,
+                    NavigationLink(destination: CreateTurnoverView(
+                        gameCollectionName: gameCollectionName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
@@ -55,8 +55,8 @@ struct SelectStatView: View {
                         StatButton(label: "Turnover", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "hand.thumbsdown.fill")
                     }
                     
-                    NavigationLink(destination: ExclusionView(
-                        gameDocumentName: gameDocumentName,
+                    NavigationLink(destination: CreateExclusionView(
+                        gameCollectionName: gameCollectionName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
@@ -66,8 +66,8 @@ struct SelectStatView: View {
                         StatButton(label: "Exclusion", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "person.slash.fill")
                     }
                     
-                    NavigationLink(destination: StealView(
-                        gameDocumentName: gameDocumentName,
+                    NavigationLink(destination: CreateStealView(
+                        gameCollectionName: gameCollectionName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam,
@@ -77,8 +77,8 @@ struct SelectStatView: View {
                         StatButton(label: "Steal", gradientColors: [Color.pastelBlue, Color.pastelPurple], iconName: "volleyball.fill")
                     }
                     
-                    NavigationLink(destination: TimeoutView(
-                        gameDocumentName: gameDocumentName,
+                    NavigationLink(destination: CreateTimeoutView(
+                        gameCollectionName: gameCollectionName,
                         quarter: quarter,
                         homeTeam: homeTeam,
                         awayTeam: awayTeam
@@ -161,7 +161,7 @@ struct SelectStatView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             SelectStatView(
-                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+                gameCollectionName: "Stanford_vs_UCLA_2024-08-25_1724557371",
                 quarter: 1,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA",

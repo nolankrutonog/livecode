@@ -116,7 +116,7 @@ struct TeamLineupView: View {
                                 .padding()
                                 .frame(width: buttonWidth, height: buttonHeight)
                                 .background(Color.gray.opacity(0.3)) // Lighter gray background
-                                .foregroundColor(.black) // Black text color
+                                .foregroundColor(.primary) // Black text color
                                 .cornerRadius(20)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
@@ -204,7 +204,7 @@ struct TeamLineupView: View {
                                 .padding()
                                 .frame(width: buttonWidth, height: buttonHeight)
                                 .background(Color.gray.opacity(0.3)) // Lighter gray background
-                                .foregroundColor(.black) // Black text color
+                                .foregroundColor(.primary) // Black text color
                                 .cornerRadius(20)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
@@ -264,7 +264,7 @@ struct TeamLineupView: View {
                                 .padding()
                                 .frame(width: buttonWidth, height: buttonHeight)
                                 .background(Color.gray.opacity(0.3)) // Lighter gray background
-                                .foregroundColor(.black) // Black text color
+                                .foregroundColor(.primary) 
                                 .cornerRadius(20)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)

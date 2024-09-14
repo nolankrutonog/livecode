@@ -1,16 +1,16 @@
 //
-//  TurnoverView.swift
+//  CreateTurnoverView.swift
 //  livecode
 //
 //  Created by Nolan Krutonog on 8/24/24.
 //
 import SwiftUI
 
-struct TurnoverView: View {
+struct CreateTurnoverView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var firebaseManager: FirebaseManager
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -24,8 +24,8 @@ struct TurnoverView: View {
     @State private var showingAlert = false
     @State private var isTimePickerPresented = false
     
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
-        self.gameDocumentName = gameDocumentName
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -58,8 +58,8 @@ struct TurnoverView: View {
                     Task {
                         do {
                             try await firebaseManager.createTurnoverStat(
-                                gameDocumentName: gameDocumentName,
-                                quarter: quarter, 
+                                gameCollectionName: gameCollectionName,
+                                quarter: quarter,
                                 timeString: timeString,
                                 team: selectedTeam,
                                 player: selectedPlayer,
@@ -107,7 +107,7 @@ struct TurnoverView: View {
                 }) {
                     HStack {
                         Text(player)
-                            .foregroundColor(selectedPlayer == player ? .white : .black)
+                            .foregroundColor(selectedPlayer == player ? .secondary: .primary)
                         Spacer()
                         if selectedPlayer == player {
                             Image(systemName: "checkmark")
@@ -174,8 +174,8 @@ struct TurnoverView_Preview: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            TurnoverView(
-                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+            CreateTurnoverView(
+                gameCollectionName: "Stanford_vs_UCLA_2024-08-25_1724557371",
                 quarter: 1,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA",

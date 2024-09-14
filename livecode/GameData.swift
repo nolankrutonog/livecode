@@ -8,23 +8,19 @@
 //import Foundation
 
 class GameData {
+    
+    var gameCollectionName: String = ""
     var homeTeam: String = ""
     var awayTeam: String = ""
     var homeInTheGame: Lineup = Lineup()
     var awayInTheGame: Lineup = Lineup()
     
-    /*
-     * if a user follows a game and requires all the stats, then isPopulated will
-     * be set to true after all the stats are updated in the gameData
-     */
-    var isPopulated: Bool = false
-    
+    /* Displayables */
     var homeScore: Int = 0
     var awayScore: Int = 0
     var quarter: Int = 1 // updated on every new stat
     var homeTimeoutsLeft: Float = 3.5
     var awayTimeoutsLeft: Float = 3.5
-
     var playByPlay: [(Int, String)] = []
     
     /*
@@ -33,16 +29,24 @@ class GameData {
     var secondsTracker: [String: [String: Int]] = [:]
     var prevTime: Int = 0
     
-    
     /* Updates the time that players are in the game */
     private func updateSecondsTracker(gameTime: Int) {
-        for player: String in homeInTheGame.field + homeInTheGame.goalies + awayInTheGame.field + awayInTheGame.goalies {
-            if secondsTracker[LineupKeys.homeTeam]?[player] != nil {
+        for player: String in homeInTheGame.field + homeInTheGame.goalies {
+            if secondsTracker[homeTeamKey]?[player] != nil {
                 /* if a player is defined already */
-                secondsTracker[LineupKeys.homeTeam]?[player]? += (gameTime - prevTime)
+                secondsTracker[homeTeamKey]?[player]? += (gameTime - prevTime)
             } else {
-                secondsTracker[LineupKeys.homeTeam]?[player] = 0
+                secondsTracker[homeTeamKey]?[player] = 0
             }
+        }
+        for player: String in awayInTheGame.field + awayInTheGame.goalies {
+            if secondsTracker[awayTeamKey]?[player] != nil {
+                /* if a player is defined already */
+                secondsTracker[awayTeamKey]?[player]? += (gameTime - prevTime)
+            } else {
+                secondsTracker[awayTeamKey]?[player] = 0
+            }
+
         }
         self.prevTime = gameTime
     }
@@ -64,8 +68,9 @@ class GameData {
 
     }
     
-    struct Shot {
+    struct Shot: Hashable {
         var gameTime: Int
+        var shooter: String
         var phaseOfGame: String
         var shooterPosition: String?
         var shotLocation: String
@@ -91,10 +96,10 @@ class GameData {
               let shotLocation = shotStat[ShotKeys.shotLocation] as? String,
               let isSkip = shotStat[ShotKeys.isSkip] as? Bool,
               let shotResult = shotStat[ShotKeys.shotResult] as? String else {
-            return ""
+            return "Error: handleShotStat() main guard failure"
         }
         
-        description += shooter + " shot "
+        description += shooter + " shoots "
         
         var shooterPosition: String?
         var shotDetail: String?
@@ -102,14 +107,14 @@ class GameData {
         if phaseOfGame != ShotKeys.phases.penalty {
             guard let position = shotStat[ShotKeys.shooterPosition] as? String,
                   let detail = shotStat[ShotKeys.shotDetail] as? String else {
-                return ""
+                return "Error: handleShotStat() non-penalty guard failure"
             }
             shooterPosition = position
             shotDetail = detail
             
             description += "in " + ShotKeys.phasesToDisp[phaseOfGame]! + " and "
         } else {
-            description += "a penalty "
+            description += "a penalty and "
         }
         
         var assistedBy: String?
@@ -120,27 +125,29 @@ class GameData {
         if shotResult == ShotKeys.shotResults.goal {
             guard let assist = shotStat[ShotKeys.assistedBy] as? String,
                   let concededBy = shotStat[ShotKeys.goalConcededBy] as? String else {
-                return ""
+                return "Error: handleShotStat() is goal guard failure"
             }
             assistedBy = assist
             goalConcededBy = concededBy
             
-            description += " scored."
+            description += "dents the twine."
         } else if shotResult == ShotKeys.shotResults.fieldBlock {
             guard let fieldBlock = shotStat[ShotKeys.fieldBlockedBy] as? String else {
-                return ""
+                return "Error: handleShotStat() is field block guard failure"
             }
             fieldBlockedBy = fieldBlock
-            description += " was field blocked."
+            description += "was field blocked."
         } else if shotResult == ShotKeys.shotResults.goalieSave {
             guard let save = shotStat[ShotKeys.savedBy] as? String else {
-                return ""
+                return "Error: handleShotStat() is goalie save guard failure"
             }
             savedBy = save
-            description += " was saved."
+            description += "was saved."
+        } else if shotResult == ShotKeys.shotResults.miss {
+            description += " sails wide of the cage."
         }
        
-        var shot = Shot(gameTime: gameTime, phaseOfGame: phaseOfGame, shotLocation: shotLocation, isSkip: isSkip, shotResult: shotResult)
+        var shot = Shot(gameTime: gameTime, shooter: shooter, phaseOfGame: phaseOfGame, shotLocation: shotLocation, isSkip: isSkip, shotResult: shotResult)
         shot.shooterPosition = shooterPosition
         shot.shotDetail = shotDetail
         shot.assistedBy = assistedBy
@@ -150,13 +157,17 @@ class GameData {
         
        
         if team == homeTeam {
-            shotTracker[LineupKeys.homeTeam, default: [:]][shooter, default: []].append(shot)
+            shotTracker[homeTeamKey, default: [:]][shooter, default: []].append(shot)
+            if shotResult == ShotKeys.shotResults.goal {
+                homeScore += 1
+            }
         } else if team == awayTeam {
-            shotTracker[LineupKeys.awayTeam, default: [:]][shooter, default: []].append(shot)
+            shotTracker[awayTeamKey, default: [:]][shooter, default: []].append(shot)
+            if shotResult == ShotKeys.shotResults.goal {
+                awayScore += 1
+            }
         }
-        
         return description
-        
     }
     
     /* EXCLUSION_TRACKER is a map from <team> (home/awayTeam) to a map of players from <playerName>: [Exclusion] */
@@ -170,27 +181,25 @@ class GameData {
     
     private func handleExclusionStat(exclusionStat: [String: Any], gameTime: Int) -> String {
         
-        var description: String = ""
         
         guard let player = exclusionStat[ExclusionKeys.excludedPlayer] as? String,
               let type = exclusionStat[ExclusionKeys.exclusionType] as? String,
               let drawnBy = exclusionStat[ExclusionKeys.drawnBy] as? String,
               let phase = exclusionStat[ExclusionKeys.phaseOfGame] as? String,
               let excludedTeam = exclusionStat[ExclusionKeys.excludedTeam] as? String else {
-            return ""
+            return "Error: handleExclusionStat() guard error"
         }
         
-//        description += player + " was excluded in " + ShotKeys.phasesToDisp[phase]!
-        print(phase)
-
         let exclusion = Exclusion(gameTime: gameTime, exclusionType: type, drawnBy: drawnBy, phaseOfGame: phase)
 
         if excludedTeam == homeTeam {
-            exclusionTracker[LineupKeys.homeTeam, default: [:]][player, default: []].append(exclusion)
+            exclusionTracker[homeTeamKey, default: [:]][player, default: []].append(exclusion)
         } else if excludedTeam == awayTeam {
-            exclusionTracker[LineupKeys.awayTeam, default: [:]][player, default: []].append(exclusion)
+            exclusionTracker[awayTeamKey, default: [:]][player, default: []].append(exclusion)
         }
         
+        var description: String = ""
+        description += player + " was excluded in " + (PhaseOfGameKeys.toDisp[phase] ?? "...\nERROR: phase of game not recognized")
         return description
     }
 
@@ -203,20 +212,22 @@ class GameData {
     
     var stealTracker: [String: [Steal]] = [:]
     
-    private func handleStealStat(stealStat: [String: Any], gameTime: Int) {
+    private func handleStealStat(stealStat: [String: Any], gameTime: Int) -> String {
         guard let stolenBy = stealStat[StealKeys.stolenBy] as? String,
               let turnoverBy = stealStat[StealKeys.turnoverBy] as? String,
               let team = stealStat[StealKeys.team] as? String else {
-            return
+            return "Error: handleStealStat() guard failure"
         }
         
         let steal = Steal(gameTime: gameTime, stolenBy: stolenBy, turnoverBy: turnoverBy)
         
         if team == homeTeam {
-            stealTracker[LineupKeys.homeTeam, default: []].append(steal)
+            stealTracker[homeTeamKey, default: []].append(steal)
         } else {
-            stealTracker[LineupKeys.awayTeam, default: []].append(steal)
+            stealTracker[awayTeamKey, default: []].append(steal)
         }
+        
+        return "Steal by " + stolenBy + " for " + team
     }
     
     struct Turnover {
@@ -226,20 +237,22 @@ class GameData {
     }
     var turnoverTracker: [String: [Turnover]] = [:]
     
-    private func handleTurnoverStat(turnoverStat: [String: Any], gameTime: Int) {
+    private func handleTurnoverStat(turnoverStat: [String: Any], gameTime: Int) -> String {
         guard let team = turnoverStat[TurnoverKeys.team] as? String,
               let player = turnoverStat[TurnoverKeys.player] as? String,
               let turnoverType = turnoverStat[TurnoverKeys.turnoverType] as? String else {
-            return
+            return "Error: handleTurnoverStat() gaurd failure"
         }
         
         let turnover = Turnover(gameTime: gameTime, player: player, turnoverType: turnoverType)
         
         if team == homeTeam {
-            turnoverTracker[LineupKeys.homeTeam, default: []].append(turnover)
+            turnoverTracker[homeTeamKey, default: []].append(turnover)
         } else if team == awayTeam {
-            turnoverTracker[LineupKeys.awayTeam, default: []].append(turnover)
+            turnoverTracker[awayTeamKey, default: []].append(turnover)
         }
+        
+        return "Turnover by " + team + ", committed by " + player
     }
     
     struct Timeout {
@@ -249,80 +262,106 @@ class GameData {
     
     var timeoutTracker: [String: [Timeout]] = [:]
     
-    private func handleTimeoutStat(timeoutStat: [String: Any], gameTime: Int) {
+    private func handleTimeoutStat(timeoutStat: [String: Any], gameTime: Int) -> String {
         guard let team = timeoutStat[TimeoutKeys.team] as? String,
               let timeoutType = timeoutStat[TimeoutKeys.timeoutType] as? String else {
-            return
+            return "Error: handleTimeoutStat() guard failure"
         }
         
         let timeout = Timeout(gameTime: gameTime, timeoutType: timeoutType)
         
         if team == homeTeam {
-            timeoutTracker[LineupKeys.homeTeam, default: []].append(timeout)
+            timeoutTracker[homeTeamKey, default: []].append(timeout)
+            homeTimeoutsLeft -= timeoutType == TimeoutKeys.full ? 1 : 0.5
         } else if team == awayTeam {
-            timeoutTracker[LineupKeys.awayTeam, default: []].append(timeout)
-        }
-    }
-    
-    private func handleStat(stat: [String: Any], gameTime: Int) {
-        var description: String = ""
-        if let lineupStat = stat[StatType.lineup] as? [String: Any] {
-            handleLineupStat(lineupStat: lineupStat, gameTime: gameTime)
-            description += "Lineup change."
-        } else if let shotStat = stat[StatType.shot] as? [String: Any] {
-            description += handleShotStat(shotStat: shotStat, gameTime: gameTime)
-        } else if let exclusionStat = stat[StatType.exclusion] as? [String: Any] {
-            description += handleExclusionStat(exclusionStat: exclusionStat, gameTime: gameTime)
-        } else if let stealStat = stat[StatType.steal] as? [String: Any] {
-            handleStealStat(stealStat: stealStat, gameTime: gameTime)
-        } else if let turnoverStat = stat[StatType.turnover] as? [String: Any] {
-            handleTurnoverStat(turnoverStat: turnoverStat, gameTime: gameTime)
-        } else if let timeoutStat = stat[StatType.timeout] as? [String: Any] {
-            handleTimeoutStat(timeoutStat: timeoutStat, gameTime: gameTime)
-        }
+            timeoutTracker[awayTeamKey, default: []].append(timeout)
+            awayTimeoutsLeft -= timeoutType == TimeoutKeys.full ? 1 : 0.5
+      }
         
-        playByPlay.append((gameTime, description))
-
+        return (TimeoutKeys.toDisp[timeoutType] ?? "") + " timeout taken by " + team
     }
     
     
     /* This is the init function for the game, run once in FirebaseManager.addGameListener() */
-    public func populate(data: [(Int, [String: Any])], homeTeam: String, awayTeam: String) {
+    public func populate(stats: [(Int, String, [String: Any])], homeTeam: String, awayTeam: String) {
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
         
-        secondsTracker[LineupKeys.homeTeam] = [:]
-        secondsTracker[LineupKeys.awayTeam] = [:]
+        secondsTracker[homeTeamKey] = [:]
+        secondsTracker[awayTeamKey] = [:]
         
-        exclusionTracker[LineupKeys.homeTeam] = [:]
-        exclusionTracker[LineupKeys.awayTeam] = [:]
+        exclusionTracker[homeTeamKey] = [:]
+        exclusionTracker[awayTeamKey] = [:]
         
-        stealTracker[LineupKeys.homeTeam] = []
-        stealTracker[LineupKeys.awayTeam] = []
+        stealTracker[homeTeamKey] = []
+        stealTracker[awayTeamKey] = []
         
-        shotTracker[LineupKeys.homeTeam] = [:]
-        shotTracker[LineupKeys.awayTeam] = [:]
+        shotTracker[homeTeamKey] = [:]
+        shotTracker[awayTeamKey] = [:]
         
-        turnoverTracker[LineupKeys.homeTeam] = []
-        turnoverTracker[LineupKeys.awayTeam] = []
+        turnoverTracker[homeTeamKey] = []
+        turnoverTracker[awayTeamKey] = []
         
-        timeoutTracker[LineupKeys.homeTeam] = []
-        timeoutTracker[LineupKeys.awayTeam] = []
+        timeoutTracker[homeTeamKey] = []
+        timeoutTracker[awayTeamKey] = []
         
-        for entry in data {
-            let gameTime = Int(entry.0)
-            updateSecondsTracker(gameTime: gameTime)
-            let stat = entry.1
-            handleStat(stat: stat, gameTime: gameTime)
+        for stat in stats {
+            addStat(gameTime: stat.0, statType: stat.1, stat: stat.2)
         }
         
-        self.isPopulated = true
+//        self.isPopulated = true
     }
     
     
-    public func addStat(stat: (Int, [String: Any])) {
-        let gameTime = Int(stat.0)
+    public func addStat(gameTime: Int, statType: String, stat: [String: Any]) {
         updateSecondsTracker(gameTime: gameTime)
-        handleStat(stat: stat.1, gameTime: gameTime)
+        var description: String = ""
+        
+        switch statType {
+        case StatType.lineup:
+            handleLineupStat(lineupStat: stat, gameTime: gameTime)
+            description += "Lineup change"
+        case StatType.shot:
+            description += handleShotStat(shotStat: stat, gameTime: gameTime)
+        case StatType.exclusion:
+            description += handleExclusionStat(exclusionStat: stat, gameTime: gameTime)
+        case StatType.steal:
+            description += handleStealStat(stealStat: stat, gameTime: gameTime)
+        case StatType.turnover:
+            description += handleTurnoverStat(turnoverStat: stat, gameTime: gameTime)
+        case StatType.timeout:
+            description += handleTimeoutStat(timeoutStat: stat, gameTime: gameTime)
+        default:
+            description += "Error: Unknown stat recorded"
+        }
+        
+//        print(description)
+        
+        playByPlay.append((gameTime, description))
     }
+    
+    public func reset() {
+//        isPopulated = false
+        secondsTracker.removeAll()
+        shotTracker.removeAll()
+        exclusionTracker.removeAll()
+        stealTracker.removeAll()
+        turnoverTracker.removeAll()
+        timeoutTracker.removeAll()
+        playByPlay.removeAll()
+        
+        gameCollectionName = ""
+        homeTeam = ""
+        awayTeam = ""
+        homeInTheGame = Lineup()
+        awayInTheGame = Lineup()
+        homeScore = 0
+        awayScore = 0
+        quarter = 1
+        homeTimeoutsLeft = 3.5
+        awayTimeoutsLeft = 3.5
+        
+    }
+    
+    
 }

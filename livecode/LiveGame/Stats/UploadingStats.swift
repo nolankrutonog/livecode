@@ -23,8 +23,6 @@ struct StealKeys {
 }
 
 struct LineupKeys {
-//    static let homeTeam = "home_team"
-//    static let awayTeam = "away_team"
     static let homeInTheGame = "home_in_the_game"
     static let awayInTheGame = "away_in_the_game"
     static let goalies = "goalies"
@@ -39,18 +37,18 @@ struct TurnoverKeys {
     static let offensiveCenter = "offensive_center"
     static let transitionPullThrough = "transition_pull_through"
     static let offensivePerimeter = "offensive_perimeter"
-    static let notLive = "not_live"
+    static let ruleBreak = "rule_break"
     
     static let dispOffensiveCenter = "Offensive at center"
-    static let dispTransitionPullThrough = "Pulling through in transition"
+    static let dispTransitionPullThrough = "Transition pull through"
     static let dispOffensivePerimeter = "Offensive on perimeter"
-    static let dispNotLive = "Did not get the ball live"
+    static let dispRuleBreak = "Rule break"
     
     static let toDisp = [
         offensiveCenter: dispOffensiveCenter,
         transitionPullThrough: dispTransitionPullThrough,
         offensivePerimeter: dispOffensivePerimeter,
-        notLive: dispNotLive
+        ruleBreak: dispRuleBreak
     ]
     
     
@@ -95,25 +93,32 @@ struct PhaseOfGameKeys {
     static let frontCourtDefense = "front_court_defense"
     static let transitionDefense = "transition_defense"
     
-    static let allPhases = [
-        "6v5",
-        "Front court offense",
-        "Transition offense",
-        "5v6",
-        "Front court defense",
-        "Transition defense"
+    static let dispSixOnFive = "6v5"
+    static let dispFrontCourtOffense = "Front court offense"
+    static let dispTransitionOffense = "Transition offense"
+    static let dispFiveOnSix = "5v6"
+    static let dispFrontCourtDefense = "Front court defense"
+    static let dispTransitionDefense = "Transition defense"
+    
+    static let toDisp = [
+        sixOnFive: dispSixOnFive,
+        frontCourtOffense: dispFrontCourtOffense,
+        transitionOffense: dispTransitionOffense,
+        fiveOnSix: dispFiveOnSix,
+        frontCourtDefense: dispFrontCourtDefense,
+        transitionDefense: dispTransitionDefense
     ]
     
-    static let defensePhases = [
-        "Front court defense",
-        "Transition defense",
-        "5v6"
+    static let defenseToDisp = [
+        fiveOnSix: dispFiveOnSix,
+        frontCourtDefense: dispFrontCourtDefense,
+        transitionDefense: dispTransitionDefense
     ]
     
-    static let offensePhases = [
-        "6v5",
-        "Front court offense",
-        "Transition offense"
+    static let offenseToDisp = [
+        sixOnFive: dispSixOnFive,
+        frontCourtOffense: dispFrontCourtOffense,
+        transitionOffense: dispTransitionOffense,
     ]
 }
 
@@ -123,6 +128,11 @@ struct TimeoutKeys {
     
     static let full = "full"
     static let half = "half"
+    
+    static let toDisp = [
+        full: "Full",
+        half: "30 second"
+    ]
 }
 
 
@@ -170,7 +180,6 @@ struct ShotKeys {
         static let center = "center"
         static let postUp = "post_up"
         static let drive = "drive"
-//        static let redirect = "redirect"
     }
     
     struct dispFcoPositions {
@@ -182,8 +191,19 @@ struct ShotKeys {
         static let center = "Center"
         static let postUp = "Post up"
         static let drive = "Drive"
-//        static let redirect = "Redirect"
     }
+    
+    static let fcoPositionsToDisp = [
+        fcoPositions.one: dispFcoPositions.one,
+        fcoPositions.two: dispFcoPositions.two,
+        fcoPositions.three: dispFcoPositions.three,
+        fcoPositions.four: dispFcoPositions.four,
+        fcoPositions.five: dispFcoPositions.five,
+        fcoPositions.center: dispFcoPositions.center,
+        fcoPositions.postUp: dispFcoPositions.postUp,
+        fcoPositions.drive: dispFcoPositions.drive,
+    ]
+    
     struct sixOnFivePositions {
         static let one = "1"
         static let two = "2"
@@ -191,8 +211,6 @@ struct ShotKeys {
         static let four = "4"
         static let five = "5"
         static let six = "6"
-        static let postUp = "post_up"
-        static let drive = "drive"
     }
     
     struct transitionOffensePositions {
@@ -206,6 +224,12 @@ struct ShotKeys {
         static let rightSide = "Right side"
         static let postUp = "Post up"
     }
+    
+    static let transitionOffensePosToDisp = [
+        transitionOffensePositions.leftSide: dispTransitionOffensePositions.leftSide,
+        transitionOffensePositions.rightSide: dispTransitionOffensePositions.rightSide,
+        transitionOffensePositions.postUp: dispTransitionOffensePositions.postUp
+    ]
 
     struct shotLocations {
         static let one = "1"

@@ -20,9 +20,9 @@ class FirebaseManager: ObservableObject {
     private var rostersAreFetched: Bool = false
 
     /*
-     * CURRENT_LINEUP is the current in-the-game players on both teams. The home team key is "home_team", found in LineupKeys.homeTeam,
+     * CURRENT_LINEUP is the current in-the-game players on both teams. The home team key is "home_team", found as const homeTeamKey,
      * the same is true for the away team. CURRENT_LINEUP is set from the most recent lineup stat in Firebase of the current game. This
-     * requires that each device statting a game only has one live game at once. CURRENT_LINEUP is a published variable that is set
+     * requires that each device can only stat one live game at a time. CURRENT_LINEUP is a published variable that is set
      * every time a new lineup stat is added to a game in Firebase.
      * currentLineup is <team_name> : <most recent lineup choice>
      */
@@ -36,140 +36,224 @@ class FirebaseManager: ObservableObject {
      * BoxScoreView(), GAME_IS_POPULATED must be set to false and GAME_DATA emptied, so that the next game the user chooses to
      * follow will be populated with the correct game data.
      */
-    @Published var gameData: GameData = GameData()
-    
+    @Published var gameDataChanged: Int = 0
+    var gameData: GameData = GameData()
    
-    /* Listens to a live game and adds the most recent stat to gameData. If gameIsNotPopulated, it sets gameData to sortedData */
-    func addGameListener(gameDocumentName: String) {
-        db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
-            guard let game = gameSnapshot else {
-                print("Error listening to game \(gameDocumentName): \(String(describing: error))")
-                return
-            }
+   
+    /*
+     * populateGameData() queries the gameCollectionName for all the stats (documents) in the gameCollection. It orders
+     * them by gameTimeField ("game_time", also the documentIDs in the gameCollectionName) in ascending order. The snapshot is
+     * used to populate the GAME_DATA var of FirebaseManager. This is only called once from BoxScoreView()
+     */
+    func populateGameData(gameCollectionName: String) async throws {
+        let gameRef = db.collection(gamesCollection)
+            .document(currentYear)
+            .collection(gameCollectionName)
+
+        do {
+            var homeTeam: String = ""
+            var awayTeam: String = ""
             
-            if let data = game.data() {
-                if let homeTeam = data[LineupKeys.homeTeam] as? String,
-                   let awayTeam = data[LineupKeys.awayTeam] as? String {
+            let snapshot = try await gameRef
+                .whereField(FieldPath.documentID(), isEqualTo: metadataDocument)
+                .getDocuments()
+            
+            if let metadata = snapshot.documents.first?.data(),
+               let ht = metadata[homeTeamKey] as? String,
+               let at = metadata[awayTeamKey] as? String {
+                homeTeam = ht
+                awayTeam = at
+            }
+          
+            let gameSnapshot = try await gameRef
+                .whereField(FieldPath.documentID(), isNotEqualTo: metadataDocument)
+                .order(by: gameTimeField, descending: false)
+                .getDocuments()
+            
+            var stats: [(Int, String, [String: Any])] = []
+            
+            for doc in gameSnapshot.documents {
+                let data = doc.data()
+                
+                if let gameTime = data[gameTimeField] as? Int,
+                   let statType = data[statTypeField] as? String,
+                   let stat = data[statField] as? [String: Any] {
+//                    print("populateGameData(), statType: \(statType)")
+                    stats.append((gameTime, statType, stat))
+                }
+                
+            }
+            // TODO: temporary fix (lol parrish/gigi)
+            // removing the last stat because addGameListener(), when snapshot listener is initialized, checks for the most
+            // recent stat. So i don't want to count it twice
+            stats.remove(at: stats.count - 1)
+            
+            
+            self.gameData.populate(stats: stats, homeTeam: homeTeam, awayTeam: awayTeam)
+            self.gameDataChanged += 1
+        } catch {
+            print(error.localizedDescription)
+        }        
+
+    }
+    
+    /*
+     * addGameListener() adds a snapshot listener to the given GAME_COLLECTION_NAME for the most recent stat. This is called from
+     * BoxScoreView()
+     */
+    func addGameListener(gameCollectionName: String) {
+        db.collection(gamesCollection)
+            .document(currentYear)
+            .collection(gameCollectionName)
+            .whereField(FieldPath.documentID(), isNotEqualTo: metadataDocument)
+            .order(by: gameTimeField, descending: true)
+            .limit(to: 1)
+            .addSnapshotListener { gameSnapshot, error in
+                guard let game = gameSnapshot else {
+                    print("Error listening to game \(gameCollectionName): \(String(describing: error))")
+                    return
+                }
+                
+                if let stat = game.documents.first {
+                    let data = stat.data()
                     
-                    let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
-                        guard let intKey = Int(key),
-                              let valueMap = value as? [String: Any] else {
-                            return nil
-                        }
-                        return (intKey, valueMap)
-                    }
-                    /* want this sorted from 0 to end so stats are added in order of when they occur */
-                        .sorted(by: { $0.0 < $1.0 })
-                    
-                    
-                    if !self.gameData.isPopulated {
-                        // isPopulated set to true in gameData.populate()
-                        self.gameData.populate(data: sortedData, homeTeam: homeTeam, awayTeam: awayTeam)
-                    } else {
-                        // add most recent stat
-                        self.gameData.addStat(stat: sortedData[sortedData.count - 1])
+                    if let gameTime = data[gameTimeField] as? Int,
+                       let statType = data[statTypeField] as? String,
+                       let stat = data[statField] as? [String: Any] {
+//                        print("addGameListener(), statType: \(statType)")
+                        self.gameData.addStat(gameTime: gameTime, statType: statType, stat: stat)
+                        self.gameDataChanged += 1
                     }
                 }
             }
-        }
+        
     }
     
-    /* Returns a list of gameDocumentNames in sorted order by timestamp descending where "is_finished" flag is false */
-    func fetchAllLiveGameNames() async throws -> [String] {
+    /*
+     * fetchGameNames() returns the list of game collection names from the collection game_names in firebase. If the
+     * IS_FINISHED is true, then it returns only the finished games, the reverse is true.
+     */
+    func fetchGameNames(isFinished: Bool) async throws -> [String] {
         var gameNames: [String] = []
         do {
-            let querySnapshot = try await db.collection("games")
-                .whereField("is_finished", in: [false])
-                .order(by: "timestamp", descending: true)
+            let snapshot = try await db.collection(gameNamesCollection)
+                .whereField(isFinishedField, isEqualTo: isFinished)
                 .getDocuments()
-            for gameDocument in querySnapshot.documents {
-                gameNames.append(gameDocument.documentID)
+            
+           
+            for document in snapshot.documents {
+                gameNames.append(document.documentID)
             }
-        } catch {
+      } catch {
             print("Error getting live game names: \(error.localizedDescription)")
         }
         return gameNames
     }
     
-    /* returns a list of gameDocumentNames where "is_finished" flag is true */
-    func fetchAllFinishedGameNames() async throws -> [String] {
-        var gameNames: [String] = []
+    
+    
+    /*
+     * getMostRecentLineup() sets CURRENT_LINEUP to the most recent lineup stat for a given GAME_COLLECTION_NAME. This
+     * is run when GameView().onAppear {...} is run to ensure that the current GameView() has the updated lineup in case
+     * a user is statting a pre-existing live game.
+     */
+    func getMostRecentLineup(gameCollectionName: String) async throws {
+        let gameCollectionRef = db.collection(gamesCollection)
+                                  .document(currentYear)
+                                  .collection(gameCollectionName)
+            
         do {
-            let querySnapshot = try await db.collection("games")
-                .whereField("is_finished", in: [true])
-                .order(by: "timestamp", descending: true)
+            let snapshot = try await gameCollectionRef
+                .whereField(FieldPath.documentID(), isNotEqualTo: metadataDocument)
+                .order(by: gameTimeField, descending: true)
                 .getDocuments()
-            for gameDocument in querySnapshot.documents {
-                gameNames.append(gameDocument.documentID)
-            }
-        } catch {
-            print("Error getting finished game names: \(error.localizedDescription)")
-        }
-        return gameNames
-    }
-    
-    
-    /* Adds a listener to the document GAME_DOCUMENT_NAME in GameView to find the most recent lineup stat */
-    func addGameViewLineupListener(gameDocumentName: String) {
-        db.collection("games").document(gameDocumentName).addSnapshotListener { gameSnapshot, error in
-            guard let game = gameSnapshot else {
-                print("Error listening to game \(gameDocumentName): \(String(describing: error))")
+            
+            var homeInTheGame: Lineup = Lineup()
+            var awayInTheGame: Lineup = Lineup()
+            
+            for document in snapshot.documents {
+                let data = document.data()
+                
+                if data[statTypeField] as? String != StatType.lineup {
+                    continue
+                }
+                
+                if let lineupStat = data[statField] as? [String: Any] {
+                    if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
+                       let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
+                       let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
+                        homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+                    } else {
+                        print("Error retrieving lineup stat from Firebase.")
+                    }
+                    
+                    if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
+                       let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
+                       let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] {
+                        awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+                    } else {
+                        print("Error retrieving lineup stat from Firebase.")
+                    }
+                }                    
+                self.currentLineup[homeTeamKey] = homeInTheGame
+                self.currentLineup[awayTeamKey] = awayInTheGame
+                
                 return
             }
-            
-            if let data = game.data() {
-                let sortedData = data.compactMap { (key, value) -> (Int, [String: Any])? in
-                    guard let intKey = Int(key), let valueMap = value as? [String: Any] else {
-                        /* This also excludes metadata keys like "is_finished" and "timestamp" */
-                        return nil
-                    }
-                    return (intKey, valueMap)
+        } catch {
+            print("Error listening to game \(gameCollectionName): \(String(describing: error))")
+        }
+        
+    }
+    
+    /* This is run when GameView appears, but always collects to check if it's a lineup stat */
+    func addGameViewLineupListener(gameCollectionName: String) {
+        let gameCollectionRef = db.collection(gamesCollection)
+                                  .document(currentYear)
+                                  .collection(gameCollectionName)
+        
+        gameCollectionRef
+            .whereField(FieldPath.documentID(), isNotEqualTo: metadataDocument)
+            .order(by: gameTimeField, descending: true)
+            .limit(to: 1)
+            .addSnapshotListener { (snapshot, error) in
+                if let error = error {
+                    print("Error listening for game stats: \(error)")
+                    return
                 }
-                .sorted(by: { $0.0 > $1.0 })
                 
                 var homeInTheGame: Lineup = Lineup()
                 var awayInTheGame: Lineup = Lineup()
                 
-                for stat in sortedData {
-                    let entry = stat.1 // stat.0 is the timestamp
+                if let document = snapshot?.documents.first {
+                    let data = document.data()
                     
-                    if let lineupStat = entry[StatType.lineup] as? [String: Any] {
+                    if data[statTypeField] as? String != StatType.lineup {
+                        return
+                    }
+                    
+                    if let lineupStat = data[statField] as? [String: Any] {
                         if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
                            let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
                            let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
-                            
-//                            let homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
-//                            DispatchQueue.main.async {
-//                                self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
-//                            }
                             homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
                         } else {
-                            print("Error: lineup stat set incorrectly in cloud.")
+                            print("Error retrieving lineup stat from Firebase.")
                         }
                         
                         if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
                            let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
-                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String]
-                        {
-//                            let awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
-//                            DispatchQueue.main.async {
-//                                self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
-//                            }
+                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] {
                             awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
                         } else {
-                            print("Error: lineup stat set incorrectly in cloud.")
+                            print("Error retrieving lineup stat from Firebase.")
                         }
-                        
-                        // Return if you found the most recent lineup stat
-                        DispatchQueue.main.async {
-                            self.currentLineup[LineupKeys.homeTeam] = homeInTheGame
-                            self.currentLineup[LineupKeys.awayTeam] = awayInTheGame
-                        }
-                        return
                     }
+                    self.currentLineup[homeTeamKey] = homeInTheGame
+                    self.currentLineup[awayTeamKey] = awayInTheGame
                 }
+                
             }
-        }
     }
     
     /* given a time string and the quarter, returns the amount of seconds passed in the game */
@@ -201,17 +285,15 @@ class FirebaseManager: ObservableObject {
                     if let data = document.data() as? [String: [String: [String]]] {
                         var teamLineups: [String: Lineup] = [:]
                         for (teamName, players) in data {
-                            let goalies = players["goalies"] ?? []
-                            let fieldPlayers = players["field"] ?? []
+                            let goalies = players[LineupKeys.goalies] ?? []
+                            let fieldPlayers = players[LineupKeys.field] ?? []
                             teamLineups[teamName] = Lineup(goalies: goalies, field: fieldPlayers)
                         }
                         fetchedAllRosters[year] = teamLineups
                     }
                 }
             }
-            DispatchQueue.main.async {
-                self.rosters = fetchedAllRosters[Calendar.current.component(.year, from: Date())] ?? [:]
-            }
+            self.rosters = fetchedAllRosters[Calendar.current.component(.year, from: Date())] ?? [:]
         } catch {
             print("Error getting rosters: \(error.localizedDescription)")
             throw FirebaseError.fetchRostersFailed
@@ -228,12 +310,21 @@ class FirebaseManager: ObservableObject {
         let newGameName = gameName + "_" + String(Int(Date().timeIntervalSince1970))
         do {
             var gameData: [String: Any] = [:]
-            gameData["timestamp"] = FieldValue.serverTimestamp()
-            gameData["is_finished"] = false
-            gameData["home_team"] = homeTeam
-            gameData["away_team"] = awayTeam
-            try await db.collection("games")
-                .document(newGameName).setData(gameData)
+            gameData[timestampField] = FieldValue.serverTimestamp()
+            gameData[homeTeamKey] = homeTeam
+            gameData[awayTeamKey] = awayTeam
+            
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(newGameName)
+                .document(metadataDocument)
+                .setData(gameData)
+            
+            // add game name to game_names collection, set is_finished to false
+            try await db.collection(gameNamesCollection)
+                .document(newGameName)
+                .setData([isFinishedField: false, timestampField: FieldValue.serverTimestamp()])
+            
         } catch {
             print("Error creating game: \(gameName)")
             throw FirebaseError.gameCreationFailed(gameName: gameName)
@@ -243,30 +334,29 @@ class FirebaseManager: ObservableObject {
     
     
     /* Sets GAME_DOCUMENT_NAME's "is_finished" to true in firebase */
-    func setGameToFinished(gameDocumentName: String) async throws {
+    func setGameToFinished(gameCollectionName: String) async throws {
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["is_finished": true], merge: true)
+            try await db.collection(gameNamesCollection)
+                .document(gameCollectionName)
+                .setData([isFinishedField: true], merge: true)
         } catch {
-            print("Error setting game to finished: \(gameDocumentName)")
+            print("Error setting game to finished: \(gameCollectionName)")
             throw FirebaseError.setGameToFinishedFailed
         }
     }
     
     
-    /* creates a lineup stat in the given gameDocumentName */
-    func createLineupsStat(gameDocumentName: String, quarter: Int, timeString: String,
-//                          homeTeam: String, awayTeam: String,
+    /* creates a lineup stat in the given gameCollectionName */
+    func createLineupsStat(gameCollectionName: String, quarter: Int, timeString: String,
                            homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
         
-        assert(!gameDocumentName.isEmpty)
+        assert(!gameCollectionName.isEmpty)
         
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let lineupData: [String: Any] = [
-            StatType.lineup: [
-//                LineupKeys.homeTeam: homeTeam,
-//                LineupKeys.awayTeam: awayTeam,
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.lineup,
+            statField: [
                 LineupKeys.homeInTheGame: [
                     LineupKeys.goalies: homeInTheGame.goalies,
                     LineupKeys.field: homeInTheGame.field
@@ -275,39 +365,45 @@ class FirebaseManager: ObservableObject {
                     LineupKeys.goalies: awayInTheGame.goalies,
                     LineupKeys.field: awayInTheGame.field
                 ]
-            ]
+            ],
         ]
         
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": lineupData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(lineupData, merge: true)
         } catch {
-            throw FirebaseError.lineupStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.lineupStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
     
     /* Creates turnover stat in firebase */
-    func createTurnoverStat(gameDocumentName: String, quarter: Int, timeString: String, team: String, player: String, turnoverType: String) async throws {
+    func createTurnoverStat(gameCollectionName: String, quarter: Int, timeString: String, team: String, player: String, turnoverType: String) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let turnoverData: [String: Any] = [
-            StatType.turnover: [
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.turnover,
+            statField: [
                 TurnoverKeys.team: team,
                 TurnoverKeys.player: player,
                 TurnoverKeys.turnoverType: turnoverType
-            ]
+            ],
         ]
         
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": turnoverData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(turnoverData, merge: true)
         } catch {
-            throw FirebaseError.turnoverStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.turnoverStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
     /* Creates exclusion stat in firebase */
-    func createExclusionStat(gameDocumentName: String, quarter: Int, timeString: String,
+    func createExclusionStat(gameCollectionName: String, quarter: Int, timeString: String,
                              excludedTeam: String,
                              excludedPlayer: String,
                              phaseOfGame: String,
@@ -316,87 +412,101 @@ class FirebaseManager: ObservableObject {
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let exclusionData: [String: Any] = [
-            StatType.exclusion: [
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.exclusion,
+            statField: [
                 ExclusionKeys.excludedTeam: excludedTeam,
                 ExclusionKeys.excludedPlayer: excludedPlayer,
                 ExclusionKeys.phaseOfGame: phaseOfGame,
                 ExclusionKeys.exclusionType: exclusionType,
                 ExclusionKeys.drawnBy: drawnBy
-            ]
+            ],
         ]
         
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": exclusionData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(exclusionData, merge: true)
         } catch {
-            throw FirebaseError.turnoverStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.turnoverStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
     
     /* creates a steal statistic for the game GAME_DOCUMENT_NAME */
-    func createStealStat(gameDocumentName: String, quarter: Int,
+    func createStealStat(gameCollectionName: String, quarter: Int,
                          timeString: String, selectedTeam: String,
                          stolenBy: String, turnoverBy: String
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let stealData: [String: Any] = [
-            StatType.steal: [
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.steal,
+            statField: [
                 StealKeys.team: selectedTeam,
                 StealKeys.stolenBy: stolenBy,
                 StealKeys.turnoverBy: turnoverBy
-            ]
+            ],
         ]
 
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": stealData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(stealData, merge: true)
         } catch {
-            throw FirebaseError.stealStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.stealStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
     
-    func createTimeoutStat(gameDocumentName: String, quarter: Int,
+    func createTimeoutStat(gameCollectionName: String, quarter: Int,
                            timeString: String, selectedTeam: String,
                            timeoutType: String
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         let timeoutData: [String: Any] = [
-            StatType.timeout: [
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.timeout,
+            statField: [
                 TimeoutKeys.team: selectedTeam,
                 TimeoutKeys.timeoutType: timeoutType
-            ]
+            ],
         ]
         
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": timeoutData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(timeoutData, merge: true)
         } catch {
-            throw FirebaseError.timoutStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.timoutStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
     
-    func createShotStat(gameDocumentName: String, quarter: Int, timeString: String,
+    func createShotStat(gameCollectionName: String, quarter: Int, timeString: String,
                         selectedTeam: String, shooter: String, phaseOfGame: String,
                         shooterPosition: String, shotLocation: String, shotDetail: String,
-                        isSkip: Bool, shotResult: String, assistedBy: String, goalConcededBy: String,
+                        isSkip: Int, shotResult: String, assistedBy: String, goalConcededBy: String,
                         fieldBlockedBy: String, savedBy: String
     ) async throws {
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
         var shotData: [String: Any] = [
-            StatType.shot: [
+            gameTimeField: timeElapsed,
+            statTypeField: StatType.shot,
+            statField: [
                 ShotKeys.team: selectedTeam,
                 ShotKeys.shooter: shooter,
                 ShotKeys.phaseOfGame: phaseOfGame,
                 ShotKeys.shotLocation: shotLocation,
-                ShotKeys.isSkip: isSkip,
+                ShotKeys.isSkip: isSkip == 1 ? true: false,
                 ShotKeys.shotResult: shotResult
-            ]
+            ],
         ]
         
-        if var shotDetails = shotData[StatType.shot] as? [String: Any] {
+        if var shotDetails = shotData[statField] as? [String: Any] {
             
             if phaseOfGame != ShotKeys.phases.penalty {
                 shotDetails[ShotKeys.shooterPosition] = shooterPosition
@@ -412,15 +522,17 @@ class FirebaseManager: ObservableObject {
                 shotDetails[ShotKeys.fieldBlockedBy] = fieldBlockedBy
             }
             
-            shotData[StatType.shot] = shotDetails
+            shotData[statField] = shotDetails
         }
         
         do {
-            try await db.collection("games")
-                .document(gameDocumentName)
-                .setData(["\(timeElapsed)": shotData], merge: true)
+            try await db.collection(gamesCollection)
+                .document(currentYear)
+                .collection(gameCollectionName)
+                .document(String(timeElapsed))
+                .setData(shotData, merge: true)
         } catch {
-            throw FirebaseError.shotStatCreationFailed(gameDocumentName: gameDocumentName)
+            throw FirebaseError.shotStatCreationFailed(gameCollectionName: gameCollectionName)
         }
     }
 
@@ -430,12 +542,12 @@ class FirebaseManager: ObservableObject {
 enum FirebaseError: Error, LocalizedError {
     case fetchRostersFailed
     case gameCreationFailed(gameName: String)
-    case lineupStatCreationFailed(gameDocumentName: String)
-    case turnoverStatCreationFailed(gameDocumentName: String)
-    case exclusionStatCreationFailed(gameDocumentName: String)
-    case stealStatCreationFailed(gameDocumentName: String)
-    case timoutStatCreationFailed(gameDocumentName: String)
-    case shotStatCreationFailed(gameDocumentName: String)
+    case lineupStatCreationFailed(gameCollectionName: String)
+    case turnoverStatCreationFailed(gameCollectionName: String)
+    case exclusionStatCreationFailed(gameCollectionName: String)
+    case stealStatCreationFailed(gameCollectionName: String)
+    case timoutStatCreationFailed(gameCollectionName: String)
+    case shotStatCreationFailed(gameCollectionName: String)
     case fetchAllGamesFailed
     case setGameToFinishedFailed
     case networkError
@@ -446,18 +558,18 @@ enum FirebaseError: Error, LocalizedError {
             return "Failed to fetch the rosters"
         case .gameCreationFailed(let gameName):
             return "Failed to start game \(gameName)"
-        case .lineupStatCreationFailed(let gameDocumentName):
-            return "Failed to upload lineup stat to game \(gameDocumentName)"
-        case .turnoverStatCreationFailed(let gameDocumentName):
-            return "Failed to upload turnover stat to game \(gameDocumentName)"
-        case .exclusionStatCreationFailed(let gameDocumentName):
-            return "Failed to upload exclusion stat to game \(gameDocumentName)"
-        case .stealStatCreationFailed(let gameDocumentName):
-            return "Failed to upload steal stat to game \(gameDocumentName)"
-        case .timoutStatCreationFailed(let gameDocumentName):
-            return "Failed to upload timout stat to game \(gameDocumentName)"
-        case .shotStatCreationFailed(let gameDocumentName):
-            return "Failed to upload shot stat to game \(gameDocumentName)"
+        case .lineupStatCreationFailed(let gameCollectionName):
+            return "Failed to upload lineup stat to game \(gameCollectionName)"
+        case .turnoverStatCreationFailed(let gameCollectionName):
+            return "Failed to upload turnover stat to game \(gameCollectionName)"
+        case .exclusionStatCreationFailed(let gameCollectionName):
+            return "Failed to upload exclusion stat to game \(gameCollectionName)"
+        case .stealStatCreationFailed(let gameCollectionName):
+            return "Failed to upload steal stat to game \(gameCollectionName)"
+        case .timoutStatCreationFailed(let gameCollectionName):
+            return "Failed to upload timout stat to game \(gameCollectionName)"
+        case .shotStatCreationFailed(let gameCollectionName):
+            return "Failed to upload shot stat to game \(gameCollectionName)"
         case .fetchAllGamesFailed:
             return "Failed to fetch game names"
         case .setGameToFinishedFailed:

@@ -15,14 +15,14 @@ struct LiveCodeView: View {
         NavigationStack {
             ZStack {
                 // Solid white background
-                Color.white
-                    .edgesIgnoringSafeArea(.all)
+//                Color.white
+//                    .edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 30) {
                     // App logo or title
                     Text("LiveCode")
                         .font(.system(size: 48, weight: .bold, design: .default)) // Bold font
-                        .foregroundColor(.black) // Black font color
+                        .foregroundColor(.primary) // Black font color
                         .padding(.top, 50)
                     
                     Spacer()
@@ -72,29 +72,29 @@ struct MenuButton: View {
         }
         .frame(maxWidth: .infinity, maxHeight: 100)
         .padding()
-        .background(Color.black.opacity(0.1)) // Light black background for buttons
-        .foregroundColor(.black) // Black font color for button text
+        .background(Color.primary.opacity(0.1)) // Light black background for buttons
+        .foregroundColor(.primary) // Black font color for button text
         .cornerRadius(15)
     }
 }
 
 
-struct StatLiveGame: View {
-    var body: some View {
-        VStack {
-            
-        }
-    }
-}
-
-
-struct FollowLiveGameView: View {
-    var body: some View {
-        VStack {
-            
-        }
-    }
-}
+//struct StatLiveGame: View {
+//    var body: some View {
+//        VStack {
+//            
+//        }
+//    }
+//}
+//
+//
+//struct FollowLiveGameView: View {
+//    var body: some View {
+//        VStack {
+//            
+//        }
+//    }
+//}
 
 struct LiveCodeView_Preview: PreviewProvider {
     static var previews: some View {

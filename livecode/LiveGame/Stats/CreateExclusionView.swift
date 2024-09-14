@@ -1,5 +1,5 @@
 //
-//  StealView.swift
+//  CreateExclusionView.swift
 //  livecode
 //
 //  Created by Nolan Krutonog on 8/25/24.
@@ -8,11 +8,14 @@
 import SwiftUI
 
 
-struct StealView: View {
+/* requires: gameCollectionName, quarter, homeTeam, awayTeam,
+             homeInTheGame, awayInTheGame
+ */
+struct CreateExclusionView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var firebaseManager: FirebaseManager
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -22,27 +25,27 @@ struct StealView: View {
     @State private var timeString: String = ""
     @State private var isTimePickerPresented = false
     
-    @State private var selectedTeam: String = ""
-    @State private var stolenBy: String = ""
-    @State private var turnoverBy: String = ""
-    @State private var showingAlert = false
-    
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
-        self.gameDocumentName = gameDocumentName
+    @State private var excludedTeam: String = ""
+    @State private var excludedPlayer: String = ""
+    @State private var phaseOfGame: String = ""
+    @State private var exclusionType: String = ""
+    @State private var drawnBy: String = ""
+
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
         self.homeInTheGame = homeInTheGame
         self.awayInTheGame = awayInTheGame
-        _selectedTeam = State(initialValue: homeTeam)
-//        _stolenBy = State(initialValue: homeInTheGame.field.first ?? "no_player")
-//        _turnoverBy = State(initialValue: awayInTheGame.field.first ?? "no_player")
+        _excludedTeam = State(initialValue: homeTeam)
+        _exclusionType = State(initialValue: "On ball center")
     }
     
     var body: some View {
         Form {
-            Section(header: Text("Steal Details")) {
-                Picker("Team", selection: $selectedTeam) {
+            Section(header: Text("Exclusion Details")) {
+                Picker("Team", selection: $excludedTeam) {
                     Text(homeTeam).tag(homeTeam)
                     Text(awayTeam).tag(awayTeam)
                 }
@@ -50,31 +53,41 @@ struct StealView: View {
                 .font(.title2)
                 .padding(.vertical, 10)
                 
-                let players = selectedTeam == homeTeam
-                    ? homeInTheGame.field + homeInTheGame.goalies
-                    : awayInTheGame.field + awayInTheGame.goalies
+                let players = excludedTeam == homeTeam ? homeInTheGame.field + homeInTheGame.goalies : awayInTheGame.field + awayInTheGame.goalies
+                let otherPlayers = excludedTeam != homeTeam ? homeInTheGame.field + homeInTheGame.goalies : awayInTheGame.field + awayInTheGame.goalies
                 
-                let otherPlayers = selectedTeam != homeTeam
-                    ? homeInTheGame.field + homeInTheGame.goalies
-                    : awayInTheGame.field + awayInTheGame.goalies
-                    
-                Picker("Stolen by", selection: $stolenBy) {
+                Picker("Excluded player", selection: $excludedPlayer) {
                     Text("").tag("")
                     ForEach(players, id: \.self) { player in
                         Text(player).tag(player)
                     }
                 }
                 
-                Picker("Turnover by", selection: $turnoverBy) {
+                Picker("Excluded in", selection: $phaseOfGame) {
+                    Text("").tag("")
+                    ForEach(Array(PhaseOfGameKeys.defenseToDisp), id: \.key) { key, value in
+                        Text(value).tag(key)
+                    }
+                }
+                
+                Picker("Exclusion type", selection: $exclusionType) {
+                    Text("").tag("")
+                    ForEach(Array(ExclusionKeys.toDisp), id: \.key) { key, value in
+                        Text(value).tag(key)
+                    }
+                }
+                
+                Picker("Drawn by", selection: $drawnBy) {
                     Text("").tag("")
                     ForEach(otherPlayers, id: \.self) { player in
                         Text(player).tag(player)
                     }
                 }
-
+                
             }
         }
-        .navigationTitle("Steal")
+        .navigationTitle("Exclusion")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Cancel") {
@@ -86,10 +99,12 @@ struct StealView: View {
                 Button("Done") {
                     isTimePickerPresented = true
                 }
-                .disabled(!canSubmit())
             }
         }
         .navigationBarBackButtonHidden(true)
+//        .alert(isPresented: $showingAlert) {
+//            confirmBackAlert
+//        }
         .sheet(isPresented: $isTimePickerPresented) {
             TimePickerView(
                 maxTime: maxQuarterMinutes,
@@ -97,13 +112,15 @@ struct StealView: View {
                 onSubmit: {
                     Task {
                         do {
-                            try await firebaseManager.createStealStat(
-                                gameDocumentName: gameDocumentName,
+                            try await firebaseManager.createExclusionStat(
+                                gameCollectionName: gameCollectionName,
                                 quarter: quarter,
                                 timeString: timeString,
-                                selectedTeam: selectedTeam,
-                                stolenBy: stolenBy,
-                                turnoverBy: turnoverBy
+                                excludedTeam: excludedTeam,
+                                excludedPlayer: excludedPlayer,
+                                phaseOfGame: phaseOfGame,
+                                exclusionType: exclusionType,
+                                drawnBy: drawnBy
                             )
                         } catch {
                            print("Failed to create exclusion stat: \(error)")
@@ -119,23 +136,20 @@ struct StealView: View {
             )
         }
     }
-    private func canSubmit() -> Bool {
-        return !stolenBy.isEmpty && !turnoverBy.isEmpty
-    }
 }
 
-struct StealView_Preview: PreviewProvider {
-    
+struct ExclusionView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            StealView(
-                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
-                quarter: 1,
+            CreateExclusionView(
+                gameCollectionName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+                quarter: 3,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA",
                 homeInTheGame: stanfordInTheGame,
                 awayInTheGame: uclaInTheGame
             )
-            .environmentObject(FirebaseManager())        }
+            .environmentObject(FirebaseManager())
+        }
     }
 }

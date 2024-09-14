@@ -13,7 +13,7 @@ struct SelectLiveGameView: View {
     var destinationGameView: Bool
     
     @State private var toDestination: Bool = false
-    @State private var selectedGameDocumentName: String? = nil
+    @State private var selectedGameCollectionName: String? = nil
     @State private var homeTeam: String = ""
     @State private var awayTeam: String = ""
     @State private var gameNames: [String] = []
@@ -28,7 +28,7 @@ struct SelectLiveGameView: View {
                     .onAppear {
                         Task {
                             do {
-                                try await gameNames = firebaseManager.fetchAllLiveGameNames()
+                                try await gameNames = firebaseManager.fetchGameNames(isFinished: false)
                                 isLoading = false
                             } catch {
                                 print("Error fetching live game names: \n\(error.localizedDescription)")
@@ -37,20 +37,20 @@ struct SelectLiveGameView: View {
                     }
             } else {
                 Form {
-                    ForEach(gameNames, id: \.self) { gameDocumentName in
-                        let gameTuple: (String, String, String) = convertGameDocumentName(gameDocumentName: gameDocumentName)
+                    ForEach(gameNames, id: \.self) { gameCollectionName in
+                        let gameTuple: (String, String, String) = convertgameCollectionName(gameCollectionName: gameCollectionName)
                         let homeTeam = gameTuple.0
                         let awayTeam = gameTuple.1
                         let date = gameTuple.2
                         Button(action: {
-                            selectedGameDocumentName = gameDocumentName
+                            selectedGameCollectionName = gameCollectionName
                             self.homeTeam = homeTeam
                             self.awayTeam = awayTeam
                             toDestination = true
                         }) {
                             Text("\(homeTeam) vs. \(awayTeam) \n\t\(date)")
                                 .font(.title3)
-                                .foregroundColor(.black)
+                                .foregroundColor(.primary)
                         }
                     }
                 }
@@ -59,10 +59,10 @@ struct SelectLiveGameView: View {
         .navigationTitle("Select Live Game")
         .navigationDestination(isPresented: $toDestination) {
             if destinationGameView {
-                GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameDocumentName: selectedGameDocumentName ?? "")
+                GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameCollectionName: selectedGameCollectionName ?? "")
                     .environmentObject(firebaseManager)
             } else {
-                BoxScoreView(gameDocumentName: selectedGameDocumentName ?? "")
+                BoxScoreView(gameCollectionName: selectedGameCollectionName ?? "")
                     .environmentObject(firebaseManager)
             }
         }
@@ -74,8 +74,8 @@ struct SelectLiveGameView: View {
     /* Splits the GAME_DOCUMENT_NAME in format <Stanford_vs_UCLA_2024-09-06_1725604436> where
      * 0th elem is homeTeam, 2nd elem in awayTeam
      */
-    private func convertGameDocumentName(gameDocumentName: String) -> (String, String, String) {
-        let asList = gameDocumentName.components(separatedBy: "_")
+    private func convertgameCollectionName(gameCollectionName: String) -> (String, String, String) {
+        let asList = gameCollectionName.components(separatedBy: "_")
         let homeTeam = asList[0]
         let awayTeam = asList[2]
         let date = asList[3]

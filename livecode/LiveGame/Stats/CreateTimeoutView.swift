@@ -1,5 +1,5 @@
 //
-//  TimeoutView.swift
+//  CreateTimeoutView.swift
 //  livecode
 //
 //  Created by Nolan Krutonog on 8/26/24.
@@ -8,11 +8,11 @@
 import SwiftUI
 
 
-struct TimeoutView: View {
+struct CreateTimeoutView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var firebaseManager: FirebaseManager
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -22,8 +22,8 @@ struct TimeoutView: View {
     @State private var timeoutType: String = ""
     @State private var isTimePickerPresented = false
     
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String) {
-        self.gameDocumentName = gameDocumentName
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -74,7 +74,7 @@ struct TimeoutView: View {
                     Task {
                         do {
                             try await firebaseManager.createTimeoutStat(
-                                gameDocumentName: gameDocumentName,
+                                gameCollectionName: gameCollectionName,
                                 quarter: quarter,
                                 timeString: timeString,
                                 selectedTeam: selectedTeam,
@@ -101,8 +101,8 @@ struct TimeoutView: View {
 struct TimeoutView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            TimeoutView(
-                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+            CreateTimeoutView(
+                gameCollectionName: "Stanford_vs_UCLA_2024-08-25_1724557371",
                 quarter: 1,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA"

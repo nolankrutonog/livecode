@@ -26,7 +26,7 @@ struct LineupsView: View {
     let homeTeam: String
     let awayTeam: String
     let quarter: Int
-    let gameDocumentName: String
+    let gameCollectionName: String
     
     @Binding var homeInTheGame: Lineup
     @Binding var homeBench: Lineup
@@ -131,7 +131,7 @@ struct LineupsView: View {
                 Task {
                     do {
                         try await firebaseManager.createLineupsStat(
-                            gameDocumentName: gameDocumentName,
+                            gameCollectionName: gameCollectionName,
                             quarter: quarter,
                             timeString: $timeString.wrappedValue,
 //                            homeTeam: homeTeam,
@@ -187,7 +187,7 @@ struct LineupsView: View {
 struct LineupsView_Previews: PreviewProvider {
     @StateObject static var firebaseManager = FirebaseManager()
 
-//    let gameDocumentName = "Stanford vs. UCLA 08-18-2024 1724474054"
+//    let gameCollectionName = "Stanford vs. UCLA 08-18-2024 1724474054"
     @State static var homeInTheGame = stanfordInTheGame
     @State static var homeBench = stanfordBench
     @State static var awayInTheGame = uclaInTheGame
@@ -198,7 +198,7 @@ struct LineupsView_Previews: PreviewProvider {
             homeTeam: "Stanford",
             awayTeam: "UCLA",
             quarter: 1,
-            gameDocumentName: "Stanford_vs_UCLA_2024-08-28_1724874036",
+            gameCollectionName: "Stanford_vs_UCLA_2024-08-28_1724874036",
             homeInTheGame: $homeInTheGame,
             homeBench: $homeBench,
             awayInTheGame: $awayInTheGame,

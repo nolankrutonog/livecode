@@ -31,7 +31,7 @@
 		41038BAE2C765EC7000E563C /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 41038BAD2C765EC7000E563C /* FirebaseStorage */; };
 		41038BB02C765EC7000E563C /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 41038BAF2C765EC7000E563C /* FirebaseStorageCombine-Community */; };
 		41038BB22C765EC7000E563C /* FirebaseVertexAI-Preview in Frameworks */ = {isa = PBXBuildFile; productRef = 41038BB12C765EC7000E563C /* FirebaseVertexAI-Preview */; };
-		410A6C942C82B80700764F3E /* ShotSingleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410A6C932C82B80700764F3E /* ShotSingleView.swift */; };
+		410A6C942C82B80700764F3E /* CreateShotSingleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410A6C932C82B80700764F3E /* CreateShotSingleView.swift */; };
 		4112D2182C8B8DFA00CC9DAD /* BoxScoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4112D2172C8B8DFA00CC9DAD /* BoxScoreView.swift */; };
 		411485162C72A81600006239 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411485152C72A81600006239 /* Constants.swift */; };
 		4114851A2C72BA5700006239 /* LineupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411485192C72BA5700006239 /* LineupsView.swift */; };
@@ -39,9 +39,9 @@
 		411753512C73E375007B3717 /* FinishedGameStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411753502C73E375007B3717 /* FinishedGameStats.swift */; };
 		411753532C73E3AA007B3717 /* SelectStatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411753522C73E3AA007B3717 /* SelectStatView.swift */; };
 		411753552C759531007B3717 /* TeamLineupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411753542C759531007B3717 /* TeamLineupView.swift */; };
-		412F0B952C7B1D2900EDE50F /* ExclusionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412F0B942C7B1D2900EDE50F /* ExclusionView.swift */; };
-		413E79052C7BB3AF00A7CEEB /* StealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79042C7BB3AF00A7CEEB /* StealView.swift */; };
-		413E79072C7CEE6B00A7CEEB /* TimeoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79062C7CEE6B00A7CEEB /* TimeoutView.swift */; };
+		412F0B952C7B1D2900EDE50F /* CreateExclusionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412F0B942C7B1D2900EDE50F /* CreateExclusionView.swift */; };
+		413E79052C7BB3AF00A7CEEB /* CreateStealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79042C7BB3AF00A7CEEB /* CreateStealView.swift */; };
+		413E79072C7CEE6B00A7CEEB /* CreateTimeoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79062C7CEE6B00A7CEEB /* CreateTimeoutView.swift */; };
 		413E79092C7CF97A00A7CEEB /* ShotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413E79082C7CF97A00A7CEEB /* ShotView.swift */; };
 		413F883E2C912F630066DF21 /* GameData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413F883D2C912F630066DF21 /* GameData.swift */; };
 		4148EA652C72F2EE00494001 /* UploadingStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4148EA642C72F2EE00494001 /* UploadingStats.swift */; };
@@ -49,7 +49,7 @@
 		4168A8362C7922FA00CFA510 /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A8352C7922FA00CFA510 /* FirebaseManager.swift */; };
 		4168A8382C7A9F3C00CFA510 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A8372C7A9F3C00CFA510 /* GameView.swift */; };
 		4168A83B2C7AB04000CFA510 /* TimePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A83A2C7AB04000CFA510 /* TimePickerView.swift */; };
-		4168A83E2C7AE8E000CFA510 /* TurnoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A83D2C7AE8E000CFA510 /* TurnoverView.swift */; };
+		4168A83E2C7AE8E000CFA510 /* CreateTurnoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4168A83D2C7AE8E000CFA510 /* CreateTurnoverView.swift */; };
 		419122A62C8162ED0097379F /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419122A52C8162ED0097379F /* AudioRecorder.swift */; };
 		41A0CDAC2C7144EA00F74BFD /* livecodeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */; };
 		41A0CDAE2C7144EA00F74BFD /* LiveCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDAD2C7144EA00F74BFD /* LiveCodeView.swift */; };
@@ -83,7 +83,7 @@
 
 /* Begin PBXFileReference section */
 		41038B822C765D07000E563C /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../Downloads/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		410A6C932C82B80700764F3E /* ShotSingleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotSingleView.swift; sourceTree = "<group>"; };
+		410A6C932C82B80700764F3E /* CreateShotSingleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateShotSingleView.swift; sourceTree = "<group>"; };
 		4112D2172C8B8DFA00CC9DAD /* BoxScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoxScoreView.swift; sourceTree = "<group>"; };
 		411485152C72A81600006239 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		411485192C72BA5700006239 /* LineupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineupsView.swift; sourceTree = "<group>"; };
@@ -91,9 +91,9 @@
 		411753502C73E375007B3717 /* FinishedGameStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinishedGameStats.swift; sourceTree = "<group>"; };
 		411753522C73E3AA007B3717 /* SelectStatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectStatView.swift; sourceTree = "<group>"; };
 		411753542C759531007B3717 /* TeamLineupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamLineupView.swift; sourceTree = "<group>"; };
-		412F0B942C7B1D2900EDE50F /* ExclusionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExclusionView.swift; sourceTree = "<group>"; };
-		413E79042C7BB3AF00A7CEEB /* StealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StealView.swift; sourceTree = "<group>"; };
-		413E79062C7CEE6B00A7CEEB /* TimeoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeoutView.swift; sourceTree = "<group>"; };
+		412F0B942C7B1D2900EDE50F /* CreateExclusionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateExclusionView.swift; sourceTree = "<group>"; };
+		413E79042C7BB3AF00A7CEEB /* CreateStealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateStealView.swift; sourceTree = "<group>"; };
+		413E79062C7CEE6B00A7CEEB /* CreateTimeoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTimeoutView.swift; sourceTree = "<group>"; };
 		413E79082C7CF97A00A7CEEB /* ShotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotView.swift; sourceTree = "<group>"; };
 		413F883D2C912F630066DF21 /* GameData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameData.swift; sourceTree = "<group>"; };
 		4148EA642C72F2EE00494001 /* UploadingStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadingStats.swift; sourceTree = "<group>"; };
@@ -101,7 +101,7 @@
 		4168A8352C7922FA00CFA510 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
 		4168A8372C7A9F3C00CFA510 /* GameView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		4168A83A2C7AB04000CFA510 /* TimePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePickerView.swift; sourceTree = "<group>"; };
-		4168A83D2C7AE8E000CFA510 /* TurnoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnoverView.swift; sourceTree = "<group>"; };
+		4168A83D2C7AE8E000CFA510 /* CreateTurnoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTurnoverView.swift; sourceTree = "<group>"; };
 		419122A52C8162ED0097379F /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		41A0CDA82C7144EA00F74BFD /* livecode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = livecode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41A0CDAB2C7144EA00F74BFD /* livecodeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = livecodeApp.swift; sourceTree = "<group>"; };
@@ -196,12 +196,12 @@
 			children = (
 				4148EA642C72F2EE00494001 /* UploadingStats.swift */,
 				411753522C73E3AA007B3717 /* SelectStatView.swift */,
-				4168A83D2C7AE8E000CFA510 /* TurnoverView.swift */,
-				412F0B942C7B1D2900EDE50F /* ExclusionView.swift */,
-				413E79042C7BB3AF00A7CEEB /* StealView.swift */,
-				413E79062C7CEE6B00A7CEEB /* TimeoutView.swift */,
+				4168A83D2C7AE8E000CFA510 /* CreateTurnoverView.swift */,
+				412F0B942C7B1D2900EDE50F /* CreateExclusionView.swift */,
+				413E79042C7BB3AF00A7CEEB /* CreateStealView.swift */,
+				413E79062C7CEE6B00A7CEEB /* CreateTimeoutView.swift */,
 				413E79082C7CF97A00A7CEEB /* ShotView.swift */,
-				410A6C932C82B80700764F3E /* ShotSingleView.swift */,
+				410A6C932C82B80700764F3E /* CreateShotSingleView.swift */,
 			);
 			path = Stats;
 			sourceTree = "<group>";
@@ -436,7 +436,7 @@
 				4115BD9D2C76F47800439A25 /* TestView.swift in Sources */,
 				4148EA652C72F2EE00494001 /* UploadingStats.swift in Sources */,
 				411753532C73E3AA007B3717 /* SelectStatView.swift in Sources */,
-				413E79072C7CEE6B00A7CEEB /* TimeoutView.swift in Sources */,
+				413E79072C7CEE6B00A7CEEB /* CreateTimeoutView.swift in Sources */,
 				411753552C759531007B3717 /* TeamLineupView.swift in Sources */,
 				41A0CDAE2C7144EA00F74BFD /* LiveCodeView.swift in Sources */,
 				4112D2182C8B8DFA00CC9DAD /* BoxScoreView.swift in Sources */,
@@ -444,18 +444,18 @@
 				41A0CDAC2C7144EA00F74BFD /* livecodeApp.swift in Sources */,
 				41A0CDD62C7147BC00F74BFD /* NewGameView.swift in Sources */,
 				4168A83B2C7AB04000CFA510 /* TimePickerView.swift in Sources */,
-				413E79052C7BB3AF00A7CEEB /* StealView.swift in Sources */,
+				413E79052C7BB3AF00A7CEEB /* CreateStealView.swift in Sources */,
 				41A0CDD82C7147C900F74BFD /* PreviousGamesView.swift in Sources */,
-				410A6C942C82B80700764F3E /* ShotSingleView.swift in Sources */,
+				410A6C942C82B80700764F3E /* CreateShotSingleView.swift in Sources */,
 				411485162C72A81600006239 /* Constants.swift in Sources */,
 				411753512C73E375007B3717 /* FinishedGameStats.swift in Sources */,
 				413F883E2C912F630066DF21 /* GameData.swift in Sources */,
 				41BD4CF92C8A437B00E8E32D /* FollowLiveGameView.swift in Sources */,
-				412F0B952C7B1D2900EDE50F /* ExclusionView.swift in Sources */,
+				412F0B952C7B1D2900EDE50F /* CreateExclusionView.swift in Sources */,
 				419122A62C8162ED0097379F /* AudioRecorder.swift in Sources */,
 				416822732C783AFB007E7190 /* EditRostersView.swift in Sources */,
 				4168A8362C7922FA00CFA510 /* FirebaseManager.swift in Sources */,
-				4168A83E2C7AE8E000CFA510 /* TurnoverView.swift in Sources */,
+				4168A83E2C7AE8E000CFA510 /* CreateTurnoverView.swift in Sources */,
 				4114851A2C72BA5700006239 /* LineupsView.swift in Sources */,
 				4168A8382C7A9F3C00CFA510 /* GameView.swift in Sources */,
 			);

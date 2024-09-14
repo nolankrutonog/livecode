@@ -11,7 +11,7 @@ import SwiftUI
 struct ShotViewSinglePage: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -25,8 +25,8 @@ struct ShotViewSinglePage: View {
     @State private var shotLocation: String = ""
     let boxSize = 100.0
 
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
-        self.gameDocumentName = gameDocumentName
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -132,7 +132,7 @@ struct ShotViewSinglePage: View {
 
 struct ShotViewModel {
     // initialized values
-    var gameDocumentName: String = ""
+    var gameCollectionName: String = ""
     var homeTeam: String = ""
     var awayTeam: String = ""
     var quarter: Int = 1
@@ -159,7 +159,7 @@ struct ShotViewModel {
 //struct ShotViewModel: Equatable, Hashable {
 //    // Conformance to Equatable
 //    static func == (lhs: ShotViewModel, rhs: ShotViewModel) -> Bool {
-//        return lhs.gameDocumentName == rhs.gameDocumentName &&
+//        return lhs.gameCollectionName == rhs.gameCollectionName &&
 //               lhs.homeTeam == rhs.homeTeam &&
 //               lhs.awayTeam == rhs.awayTeam &&
 //               lhs.quarter == rhs.quarter &&
@@ -181,7 +181,7 @@ struct ShotViewModel {
 //    
 //    // Conformance to Hashable
 //    func hash(into hasher: inout Hasher) {
-//        hasher.combine(gameDocumentName)
+//        hasher.combine(gameCollectionName)
 //        hasher.combine(homeTeam)
 //        hasher.combine(awayTeam)
 //        hasher.combine(quarter)
@@ -202,7 +202,7 @@ struct ShotViewModel {
 //    }
 //    
 //    // Initialized values
-//    var gameDocumentName: String = ""
+//    var gameCollectionName: String = ""
 //    var homeTeam: String = ""
 //    var awayTeam: String = ""
 //    var quarter: Int = 1
@@ -236,23 +236,23 @@ struct ShotViewModel {
 ////    @State private var nextView: String = ""
 //    @State private var navigateToSelectPlayer = false;
 //    
-//    let gameDocumentName: String
+//    let gameCollectionName: String
 //    let quarter: Int
 //    let homeTeam: String
 //    let awayTeam: String
 //    let homeInTheGame: Lineup
 //    let awayInTheGame: Lineup
 //    
-//    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup, navigationPath: Binding<[AnyHashable]>) {
+//    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup, navigationPath: Binding<[AnyHashable]>) {
 //        self._navigationPath = navigationPath
-//        self.gameDocumentName = gameDocumentName
+//        self.gameCollectionName = gameCollectionName
 //        self.quarter = quarter
 //        self.homeTeam = homeTeam
 //        self.awayTeam = awayTeam
 //        self.homeInTheGame = homeInTheGame
 //        self.awayInTheGame = awayInTheGame
 //        
-//        shotViewModel.gameDocumentName = gameDocumentName
+//        shotViewModel.gameCollectionName = gameCollectionName
 //        shotViewModel.quarter = quarter
 //        
 //    }
@@ -303,23 +303,23 @@ struct ShotView: View {
     
     @State private var shotViewModel: ShotViewModel = ShotViewModel()
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
     let homeInTheGame: Lineup
     let awayInTheGame: Lineup
     
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup, navigationPath: Binding<[AnyHashable]>) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup, navigationPath: Binding<[AnyHashable]>) {
         self._navigationPath = navigationPath
-        self.gameDocumentName = gameDocumentName
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
         self.homeInTheGame = homeInTheGame
         self.awayInTheGame = awayInTheGame
         
-        shotViewModel.gameDocumentName = gameDocumentName
+        shotViewModel.gameCollectionName = gameCollectionName
         shotViewModel.quarter = quarter
     }
 
@@ -1121,7 +1121,7 @@ struct FinishShotView: View {
 //        .navigationDestination(isPresented: $navigateToGameView) {
 //            GameView(homeTeam: $shotViewModel.homeTeam.wrappedValue, 
 //                     awayTeam: $shotViewModel.awayTeam.wrappedValue,
-//                     gameDocumentName: $shotViewModel.gameDocumentName.wrappedValue
+//                     gameCollectionName: $shotViewModel.gameCollectionName.wrappedValue
 //            )
 //            .environmentObject(FirebaseManager())
 //        }
@@ -1134,7 +1134,7 @@ struct ShotView_Preview: PreviewProvider {
     static var previews: some View {
         NavigationStack(path: $navigationPath) {
             ShotView(
-                gameDocumentName: "Stanford_vs_UCLA_2024-08-25_1724557371",
+                gameCollectionName: "Stanford_vs_UCLA_2024-08-25_1724557371",
                 quarter: 1,
                 homeTeam: "Stanford",
                 awayTeam: "UCLA",
@@ -1151,7 +1151,7 @@ struct ShotView_Preview: PreviewProvider {
 //    static var previews: some View {
 //        NavigationStack {
 //            ShotViewSinglePage(
-//                gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", quarter: 1, homeTeam: "Stanford", awayTeam: "UCLA", homeInTheGame: stanfordInTheGame, awayInTheGame: uclaInTheGame
+//                gameCollectionName: "Stanford_vs_UCLA-2024-08-25_1724557371", quarter: 1, homeTeam: "Stanford", awayTeam: "UCLA", homeInTheGame: stanfordInTheGame, awayInTheGame: uclaInTheGame
 //            )
 //            .environmentObject(FirebaseManager())
 //        }

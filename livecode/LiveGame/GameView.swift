@@ -12,11 +12,9 @@ struct GameView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     @State private var path = NavigationPath()
     
-    
-    
     let homeTeam: String
     let awayTeam: String
-    let gameDocumentName: String
+    let gameCollectionName: String
     
     @State private var currentQuarter = 1
     @State private var showNewStat = false
@@ -29,15 +27,15 @@ struct GameView: View {
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
     
-//    @Binding var gameDocumentName: String
+//    @Binding var gameCollectionName: String
     
     // used to only call onAppear once (setting benches & creating firebase game)
     @State private var hasAppeared = false
     
-    init(homeTeam: String, awayTeam: String, gameDocumentName: String) {
+    init(homeTeam: String, awayTeam: String, gameCollectionName: String) {
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
-        self.gameDocumentName = gameDocumentName
+        self.gameCollectionName = gameCollectionName
     }
 
     var body: some View {
@@ -93,7 +91,7 @@ struct GameView: View {
             // Larger Lineups button
             NavigationLink(
                 destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, quarter: currentQuarter,
-                                         gameDocumentName: gameDocumentName,
+                                         gameCollectionName: gameCollectionName,
                                          homeInTheGame: $homeInTheGame, homeBench: $homeBench,
                                          awayInTheGame: $awayInTheGame, awayBench: $awayBench)
                 .environmentObject(firebaseManager)
@@ -110,7 +108,7 @@ struct GameView: View {
             
             // TODO: if lineups arent set, then make this button gray
             NavigationLink(destination: SelectStatView(
-                gameDocumentName: gameDocumentName,
+                gameCollectionName: gameCollectionName,
                 quarter: currentQuarter,
                 homeTeam: homeTeam,
                 awayTeam: awayTeam,
@@ -150,7 +148,7 @@ struct GameView: View {
                     primaryButton: .destructive(Text("Finish")) {
                         Task {
                             do {
-                                try await firebaseManager.setGameToFinished(gameDocumentName: gameDocumentName)
+                                try await firebaseManager.setGameToFinished(gameCollectionName: gameCollectionName)
                             } catch {
                                 print("Error: \(error.localizedDescription)")
                             }
@@ -176,7 +174,16 @@ struct GameView: View {
                 homeBench = stanfordFullRoster
                 awayBench = uclaFullRoster
                 
-                firebaseManager.addGameViewLineupListener(gameDocumentName: gameDocumentName)
+                Task {
+                    do {
+                        try await firebaseManager.getMostRecentLineup(gameCollectionName: gameCollectionName)
+                        firebaseManager.addGameViewLineupListener(gameCollectionName: gameCollectionName)
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+
+                }
+                
                 
             }
         }
@@ -193,8 +200,8 @@ struct GameView: View {
         awayBench.goalies.append(contentsOf: awayInTheGame.goalies)
         
         // Update inTheGame lineups
-        homeInTheGame = newLineup[LineupKeys.homeTeam] ?? Lineup()
-        awayInTheGame = newLineup[LineupKeys.awayTeam] ?? Lineup()
+        homeInTheGame = newLineup[homeTeamKey] ?? Lineup()
+        awayInTheGame = newLineup[awayTeamKey] ?? Lineup()
         
         // Remove inTheGame players from the benches
         homeBench.field.removeAll { homeInTheGame.field.contains($0) }
@@ -212,7 +219,7 @@ struct GameView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameDocumentName: "Stanford_vs_UCLA_2024-09-06_1725658652")
+                     gameCollectionName: "Stanford_vs_UCLA_2024-09-12_1726197263")
             .environmentObject(firebaseManager)
         }
     }

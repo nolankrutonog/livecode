@@ -20,7 +20,7 @@ struct NewGameView: View {
     @State private var isLoading: Bool = true
     @State private var errMsg: String?
     
-    @State private var gameDocumentName: String = ""
+    @State private var gameCollectionName: String = ""
     
     var generatedGameName: String {
         
@@ -86,7 +86,7 @@ struct NewGameView: View {
                     if isFormValid {
                         Task {
                             do {
-                                gameDocumentName = try await firebaseManager.createGameDocument(gameName: gameName, homeTeam: homeTeam, awayTeam: awayTeam)
+                                gameCollectionName = try await firebaseManager.createGameDocument(gameName: gameName, homeTeam: homeTeam, awayTeam: awayTeam)
                                 navigateToGame = true
                             } catch {
                                 print("Error creating game \(gameName)")
@@ -106,7 +106,7 @@ struct NewGameView: View {
             .navigationTitle("New Game")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $navigateToGame) {
-                GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameDocumentName: gameDocumentName)
+                GameView(homeTeam: homeTeam, awayTeam: awayTeam, gameCollectionName: gameCollectionName)
                     .environmentObject(firebaseManager)
             }
             .onChange(of: homeTeam) { _, _ in updateGameName() }

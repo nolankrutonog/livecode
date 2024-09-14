@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-struct ShotSingleView: View {
+struct CreateShotSingleView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     @Environment(\.presentationMode) var presentationMode
     @State private var isTimePickerPresented = false
     @State private var timeString = ""
     
-    let gameDocumentName: String
+    let gameCollectionName: String
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
@@ -27,7 +27,7 @@ struct ShotSingleView: View {
     @State private var shooterPosition: String = "" // isEmpty on penalty
     @State private var shotLocation: String = ""
     @State private var shotDetail: String = "" // isEmpty on penalty
-    @State private var isSkip: Bool = false
+    @State private var isSkip: Int = 0
     @State private var shotResult: String = ""
     
     // only one of the members below is selected
@@ -39,8 +39,8 @@ struct ShotSingleView: View {
     @State private var is7v6: Bool = false
     @State private var goalie: String = ""
     
-    init(gameDocumentName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
-        self.gameDocumentName = gameDocumentName
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+        self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
         self.awayTeam = awayTeam
@@ -85,9 +85,12 @@ struct ShotSingleView: View {
                             Text("").tag("")
                             switch phaseOfGame {
                             case ShotKeys.phases.transitionOffense:
-                                Text(ShotKeys.dispTransitionOffensePositions.leftSide).tag(ShotKeys.transitionOffensePositions.leftSide)
-                                Text(ShotKeys.dispTransitionOffensePositions.rightSide).tag(ShotKeys.transitionOffensePositions.rightSide)
-                                Text(ShotKeys.dispTransitionOffensePositions.postUp).tag(ShotKeys.transitionOffensePositions.postUp)
+//                                Text(ShotKeys.dispTransitionOffensePositions.leftSide).tag(ShotKeys.transitionOffensePositions.leftSide)
+//                                Text(ShotKeys.dispTransitionOffensePositions.rightSide).tag(ShotKeys.transitionOffensePositions.rightSide)
+//                                Text(ShotKeys.dispTransitionOffensePositions.postUp).tag(ShotKeys.transitionOffensePositions.postUp)
+                                ForEach(Array(ShotKeys.transitionOffensePosToDisp), id: \.key) { key, value in
+                                    Text(value).tag(key)
+                                }
                             case ShotKeys.phases.sixOnFive:
                                 Text(ShotKeys.sixOnFivePositions.one).tag(ShotKeys.sixOnFivePositions.one)
                                 Text(ShotKeys.sixOnFivePositions.two).tag(ShotKeys.sixOnFivePositions.two)
@@ -96,14 +99,17 @@ struct ShotSingleView: View {
                                 Text(ShotKeys.sixOnFivePositions.five).tag(ShotKeys.sixOnFivePositions.five)
                                 Text(ShotKeys.sixOnFivePositions.six).tag(ShotKeys.sixOnFivePositions.six)
                             default: // front court offense
-                                Text(ShotKeys.dispFcoPositions.one).tag(ShotKeys.fcoPositions.one)
-                                Text(ShotKeys.dispFcoPositions.two).tag(ShotKeys.fcoPositions.two)
-                                Text(ShotKeys.dispFcoPositions.three).tag(ShotKeys.fcoPositions.three)
-                                Text(ShotKeys.dispFcoPositions.four).tag(ShotKeys.fcoPositions.four)
-                                Text(ShotKeys.dispFcoPositions.five).tag(ShotKeys.fcoPositions.five)
-                                Text(ShotKeys.dispFcoPositions.center).tag(ShotKeys.fcoPositions.center)
-                                Text(ShotKeys.dispFcoPositions.postUp).tag(ShotKeys.fcoPositions.postUp)
-                                Text(ShotKeys.dispFcoPositions.drive).tag(ShotKeys.fcoPositions.drive)
+                                ForEach(Array(ShotKeys.fcoPositionsToDisp), id: \.key) { key, value in
+                                    Text(value).tag(key)
+                                }
+//                                Text(ShotKeys.dispFcoPositions.one).tag(ShotKeys.fcoPositions.one)
+//                                Text(ShotKeys.dispFcoPositions.two).tag(ShotKeys.fcoPositions.two)
+//                                Text(ShotKeys.dispFcoPositions.three).tag(ShotKeys.fcoPositions.three)
+//                                Text(ShotKeys.dispFcoPositions.four).tag(ShotKeys.fcoPositions.four)
+//                                Text(ShotKeys.dispFcoPositions.five).tag(ShotKeys.fcoPositions.five)
+//                                Text(ShotKeys.dispFcoPositions.center).tag(ShotKeys.fcoPositions.center)
+//                                Text(ShotKeys.dispFcoPositions.postUp).tag(ShotKeys.fcoPositions.postUp)
+//                                Text(ShotKeys.dispFcoPositions.drive).tag(ShotKeys.fcoPositions.drive)
                             }
                         }
                     }
@@ -125,9 +131,9 @@ struct ShotSingleView: View {
                     }
                     
                     Picker("Is skip", selection: $isSkip) {
-                        Text("").tag(false)
-                        Text("Skip").tag(true)
-                        Text("No skip").tag(false)
+                        Text("").tag(2)
+                        Text("Skip").tag(1)
+                        Text("No skip").tag(0)
                     }
                     
                     Picker("Result", selection: $shotResult) {
@@ -248,7 +254,7 @@ struct ShotSingleView: View {
                     Task {
                         do {
                             try await firebaseManager.createShotStat(
-                                gameDocumentName: gameDocumentName,
+                                gameCollectionName: gameCollectionName,
                                 quarter: quarter,
                                 timeString: timeString,
                                 selectedTeam: selectedTeam,
@@ -283,7 +289,9 @@ struct ShotSingleView: View {
         if shooter.isEmpty 
             || phaseOfGame.isEmpty
             || shotLocation.isEmpty
-            || shotResult.isEmpty {
+            || shotResult.isEmpty 
+            || isSkip == 2
+        {
             return false
         }
         
@@ -338,7 +346,7 @@ struct SingleShotView_Preview: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            ShotSingleView(gameDocumentName: "Stanford_vs_UCLA-2024-08-25_1724557371", 
+            CreateShotSingleView(gameCollectionName: "Stanford_vs_UCLA-2024-08-25_1724557371", 
                            quarter: 1,
                            homeTeam: "Stanford",
                            awayTeam: "UCLA",
