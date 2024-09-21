@@ -12,8 +12,8 @@ class GameData {
     var gameCollectionName: String = ""
     var homeTeam: String = ""
     var awayTeam: String = ""
-    var homeInTheGame: Lineup = Lineup()
-    var awayInTheGame: Lineup = Lineup()
+    var homeInTheGame = LineupWithCapNumbers()
+    var awayInTheGame = LineupWithCapNumbers()
     
     /* Displayables */
     var homeScore: Int = 0
@@ -31,20 +31,20 @@ class GameData {
     
     /* Updates the time that players are in the game */
     private func updateSecondsTracker(gameTime: Int) {
-        for player: String in homeInTheGame.field + homeInTheGame.goalies {
-            if secondsTracker[homeTeamKey]?[player] != nil {
+        for player: Player in homeInTheGame.field + homeInTheGame.goalies {
+            if secondsTracker[homeTeamKey]?[player.name] != nil {
                 /* if a player is defined already */
-                secondsTracker[homeTeamKey]?[player]? += (gameTime - prevTime)
+                secondsTracker[homeTeamKey]?[player.name]? += (gameTime - prevTime)
             } else {
-                secondsTracker[homeTeamKey]?[player] = 0
+                secondsTracker[homeTeamKey]?[player.name] = 0
             }
         }
-        for player: String in awayInTheGame.field + awayInTheGame.goalies {
-            if secondsTracker[awayTeamKey]?[player] != nil {
+        for player: Player in awayInTheGame.field + awayInTheGame.goalies {
+            if secondsTracker[awayTeamKey]?[player.name] != nil {
                 /* if a player is defined already */
-                secondsTracker[awayTeamKey]?[player]? += (gameTime - prevTime)
+                secondsTracker[awayTeamKey]?[player.name]? += (gameTime - prevTime)
             } else {
-                secondsTracker[awayTeamKey]?[player] = 0
+                secondsTracker[awayTeamKey]?[player.name] = 0
             }
 
         }
@@ -53,17 +53,43 @@ class GameData {
     
     private func handleLineupStat(lineupStat: [String: Any], gameTime: Int) {
         if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
-           let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
-           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String]
+           let homeField = homeInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [[String: Any]]
         {
-            self.homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+            for fbField in homeField {
+                if let name = fbField[nameKey] as? String,
+                   let num = fbField[numberKey] as? Int,
+                   let notes = fbField[notesKey] as? String {
+                    self.homeInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                }
+            }
+            for fbGoalie in homeGoalies {
+                if let name = fbGoalie[nameKey] as? String,
+                   let num = fbGoalie[numberKey] as? Int,
+                   let notes = fbGoalie[notesKey] as? String {
+                    self.homeInTheGame.addGoalie(name: name, num: num, notes: notes)
+                }
+            }
         }
         
         if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
-           let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
-           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String]
+           let awayField = awayInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [[String: Any]]
         {
-            self.awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+            for fbField in awayField {
+                if let name = fbField[nameKey] as? String,
+                   let num = fbField[numberKey] as? Int,
+                   let notes = fbField[notesKey] as? String {
+                    self.awayInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                }
+            }
+            for fbGoalie in awayGoalies {
+                if let name = fbGoalie[nameKey] as? String,
+                   let num = fbGoalie[numberKey] as? Int,
+                   let notes = fbGoalie[notesKey] as? String {
+                    self.awayInTheGame.addGoalie(name: name, num: num, notes: notes)
+                }
+            }
         }
 
     }
@@ -353,8 +379,8 @@ class GameData {
         gameCollectionName = ""
         homeTeam = ""
         awayTeam = ""
-        homeInTheGame = Lineup()
-        awayInTheGame = Lineup()
+        homeInTheGame = LineupWithCapNumbers()
+        awayInTheGame = LineupWithCapNumbers()
         homeScore = 0
         awayScore = 0
         quarter = 1

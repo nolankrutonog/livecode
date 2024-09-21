@@ -18,9 +18,11 @@ struct NewGameView: View {
     
     // waits for firebaseManager to fetchRosters
     @State private var isLoading: Bool = true
-    @State private var errMsg: String?
+//    @State private var errMsg: String?
     
     @State private var gameCollectionName: String = ""
+    
+    @State private var teams: [String] = []
     
     var generatedGameName: String {
         
@@ -45,28 +47,30 @@ struct NewGameView: View {
                 .onAppear {
                     loadRosters()
                 }
-        } else if let errMsg = errMsg {
-            Text(errMsg)
-                .foregroundColor(.red)
-                .padding()
-            Button("Retry") {
-                loadRosters()
-            }
-            .padding()
-        } else {
+        } 
+//        else if let errMsg = errMsg {
+//            Text(errMsg)
+//                .foregroundColor(.red)
+//                .padding()
+//            Button("Retry") {
+//                loadRosters()
+//            }
+//            .padding()
+//        } 
+        else {
             VStack(spacing: 0) {
                 Form {
                     Section(header: Text("Game Details")) {
                         Picker("Home Team", selection: $homeTeam) {
                             Text("Select Home Team").tag("")
-                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+                            ForEach(teams, id: \.self) { teamName in
                                 Text(teamName).tag(teamName)
                             }
                         }
                         
                         Picker("Away Team", selection: $awayTeam) {
                             Text("Select Away Team").tag("")
-                            ForEach(firebaseManager.rosters.keys.sorted(), id: \.self) { teamName in
+                            ForEach(teams, id: \.self) { teamName in
                                 Text(teamName).tag(teamName)
                             }
                         }
@@ -125,20 +129,15 @@ struct NewGameView: View {
     }
     
     private func loadRosters() {
-        isLoading = true
-        errMsg = nil
-
         Task {
             do {
-                try await firebaseManager.fetchRosters()
+                teams = try await firebaseManager.fetchRosterNames()
                 isLoading = false
-            } catch let error as FirebaseError {
-                errMsg = error.localizedDescription
+            } 
+            catch {
+                print(error.localizedDescription)
                 isLoading = false
-            } catch {
-                errMsg = "An unexpected error occurred."
-                isLoading = false
-            }
+            } 
         }
     }
 }

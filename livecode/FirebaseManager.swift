@@ -10,14 +10,14 @@ import Firebase
 class FirebaseManager: ObservableObject {
     let db = Firestore.firestore()
     
-    /*
-     * ROSTERS is a map of the rosters from Firebase. They map from team_name: String (document) to a roster: struct Lineup (field).
-     * The rosters should only be fetched once (upon creating a new game) and in future releases will be able to edit rosters in
-     * Firebase from the app.
-     * rosters is <team_name> : <entire roster> as bench lineup
-     */
-    @Published var rosters: [String: Lineup] = [:]
-    private var rostersAreFetched: Bool = false
+//    /*
+//     * ROSTERS is a map of the rosters from Firebase. They map from team_name: String (document) to a roster: struct Lineup (field).
+//     * The rosters should only be fetched once (upon creating a new game) and in future releases will be able to edit rosters in
+//     * Firebase from the app.
+//     * rosters is <team_name> : <entire roster> as bench lineup
+//     */
+//    @Published var rosters: [String: LineupWithCapNumbers] = [:]
+//    private var rostersAreFetched: Bool = false
 
     /*
      * CURRENT_LINEUP is the current in-the-game players on both teams. The home team key is "home_team", found as const homeTeamKey,
@@ -26,7 +26,7 @@ class FirebaseManager: ObservableObject {
      * every time a new lineup stat is added to a game in Firebase.
      * currentLineup is <team_name> : <most recent lineup choice>
      */
-    @Published var currentLineup: [String: Lineup] = [:]
+    @Published var currentLineup: [String: LineupWithCapNumbers] = [:]
     
     
     /*
@@ -168,8 +168,8 @@ class FirebaseManager: ObservableObject {
                 .order(by: gameTimeField, descending: true)
                 .getDocuments()
             
-            var homeInTheGame: Lineup = Lineup()
-            var awayInTheGame: Lineup = Lineup()
+            let homeInTheGame = LineupWithCapNumbers()
+            let awayInTheGame = LineupWithCapNumbers()
             
             for document in snapshot.documents {
                 let data = document.data()
@@ -180,21 +180,50 @@ class FirebaseManager: ObservableObject {
                 
                 if let lineupStat = data[statField] as? [String: Any] {
                     if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
-                       let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
-                       let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
-                        homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+                       let homeField = homeInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+                       let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [[String: Any]] {
+                        for fbPlayer in homeField {
+                            if let name = fbPlayer[nameKey] as? String,
+                               let num = fbPlayer[numberKey] as? Int,
+                               let notes = fbPlayer[notesKey] as? String {
+                                homeInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                            }
+                        }
+                        
+                        for fbGoalie in homeGoalies {
+                            if let name = fbGoalie[nameKey] as? String,
+                               let num = fbGoalie[numberKey] as? Int,
+                               let notes = fbGoalie[notesKey] as? String {
+                                homeInTheGame.addGoalie(name: name, num: num, notes: notes)
+                            }
+                        }
+                        
                     } else {
                         print("Error retrieving lineup stat from Firebase.")
                     }
                     
                     if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
-                       let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
-                       let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] {
-                        awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+                       let awayField = awayInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+                       let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [[String: Any]] {
+                        for fbPlayer in awayField {
+                            if let name = fbPlayer[nameKey] as? String,
+                               let num = fbPlayer[numberKey] as? Int,
+                               let notes = fbPlayer[notesKey] as? String {
+                                awayInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                            }
+                        }
+                        
+                        for fbGoalie in awayGoalies {
+                            if let name = fbGoalie[nameKey] as? String,
+                               let num = fbGoalie[numberKey] as? Int,
+                               let notes = fbGoalie[notesKey] as? String {
+                                awayInTheGame.addGoalie(name: name, num: num, notes: notes)
+                            }
+                        }
                     } else {
                         print("Error retrieving lineup stat from Firebase.")
                     }
-                }                    
+                }
                 self.currentLineup[homeTeamKey] = homeInTheGame
                 self.currentLineup[awayTeamKey] = awayInTheGame
                 
@@ -222,8 +251,6 @@ class FirebaseManager: ObservableObject {
                     return
                 }
                 
-                var homeInTheGame: Lineup = Lineup()
-                var awayInTheGame: Lineup = Lineup()
                 
                 if let document = snapshot?.documents.first {
                     let data = document.data()
@@ -232,28 +259,61 @@ class FirebaseManager: ObservableObject {
                         return
                     }
                     
+                    let homeInTheGame = LineupWithCapNumbers()
+                    let awayInTheGame = LineupWithCapNumbers()
+   
                     if let lineupStat = data[statField] as? [String: Any] {
                         if let homeInTheGameRaw = lineupStat[LineupKeys.homeInTheGame] as? [String: Any],
-                           let homeField = homeInTheGameRaw[LineupKeys.field] as? [String],
-                           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [String] {
-                            homeInTheGame = Lineup(goalies: homeGoalies, field: homeField)
+                           let homeField = homeInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+                           let homeGoalies = homeInTheGameRaw[LineupKeys.goalies] as? [[String: Any]] {
+                            
+                            for fbPlayer in homeField {
+                                if let name = fbPlayer[nameKey] as? String,
+                                   let num = fbPlayer[numberKey] as? Int,
+                                   let notes = fbPlayer[notesKey] as? String {
+                                    homeInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                                }
+                            }
+                            
+                            for fbGoalie in homeGoalies {
+                                if let name = fbGoalie[nameKey] as? String,
+                                   let num = fbGoalie[numberKey] as? Int,
+                                   let notes = fbGoalie[notesKey] as? String {
+                                    homeInTheGame.addGoalie(name: name, num: num, notes: notes)
+                                }
+                            }
+                            
                         } else {
                             print("Error retrieving lineup stat from Firebase.")
                         }
                         
                         if let awayInTheGameRaw = lineupStat[LineupKeys.awayInTheGame] as? [String: Any],
-                           let awayField = awayInTheGameRaw[LineupKeys.field] as? [String],
-                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [String] {
-                            awayInTheGame = Lineup(goalies: awayGoalies, field: awayField)
+                           let awayField = awayInTheGameRaw[LineupKeys.field] as? [[String: Any]],
+                           let awayGoalies = awayInTheGameRaw[LineupKeys.goalies] as? [[String: Any]] {
+                            for fbPlayer in awayField {
+                                if let name = fbPlayer[nameKey] as? String,
+                                   let num = fbPlayer[numberKey] as? Int,
+                                   let notes = fbPlayer[notesKey] as? String {
+                                   awayInTheGame.addFieldPlayer(name: name, num: num, notes: notes)
+                                }
+                            }
+                            
+                            for fbGoalie in awayGoalies {
+                                if let name = fbGoalie[nameKey] as? String,
+                                   let num = fbGoalie[numberKey] as? Int,
+                                   let notes = fbGoalie[notesKey] as? String {
+                                   awayInTheGame.addGoalie(name: name, num: num, notes: notes)
+                                }
+                            }
                         } else {
                             print("Error retrieving lineup stat from Firebase.")
                         }
-                    }
+                    }                    
                     self.currentLineup[homeTeamKey] = homeInTheGame
                     self.currentLineup[awayTeamKey] = awayInTheGame
                 }
-                
-            }
+            }        
+
     }
     
     /* given a time string and the quarter, returns the amount of seconds passed in the game */
@@ -272,34 +332,9 @@ class FirebaseManager: ObservableObject {
         return secondsOfPastQuarters + timePassedInQuarter
     }
 
-    /* Populates rosters */
-    func fetchRosters() async throws {
-        guard !rostersAreFetched else { return }
-        rostersAreFetched = true
-        
-        do {
-            let querySnapshot = try await db.collection("rosters").getDocuments()
-            var fetchedAllRosters: [Int: [String: Lineup]] = [:]
-            for document in querySnapshot.documents {
-                if let year = Int(document.documentID) {
-                    if let data = document.data() as? [String: [String: [String]]] {
-                        var teamLineups: [String: Lineup] = [:]
-                        for (teamName, players) in data {
-                            let goalies = players[LineupKeys.goalies] ?? []
-                            let fieldPlayers = players[LineupKeys.field] ?? []
-                            teamLineups[teamName] = Lineup(goalies: goalies, field: fieldPlayers)
-                        }
-                        fetchedAllRosters[year] = teamLineups
-                    }
-                }
-            }
-            self.rosters = fetchedAllRosters[Calendar.current.component(.year, from: Date())] ?? [:]
-        } catch {
-            print("Error getting rosters: \(error.localizedDescription)")
-            throw FirebaseError.fetchRostersFailed
-        }
-    }
-    
+    /*
+     * Returns the names of the rosters of the current year, used in SelectRosterView(), NewGameView()
+     */
     func fetchRosterNames() async throws -> [String] {
         var rosterNames: [String] = []
         do {
@@ -318,25 +353,109 @@ class FirebaseManager: ObservableObject {
         return rosterNames
     }
     
-    /* returns a Lineup() given the teamName */
-    func getFullLineupOf(teamName: String) -> Lineup {
-        return rosters[teamName] ?? Lineup()
+    /*
+     * fetchRoster(), given ROSTER_NAME, returns the roster from firebase as the class LineupWithCapNumbers
+     */
+    func fetchRoster(rosterName: String) async throws -> LineupWithCapNumbers {
+        let lineup = LineupWithCapNumbers()
+        do {
+            let snapshot = try await db.collection(rostersCollection)
+                .document(currentYear)
+                .getDocument()
+            
+            if let data = snapshot.data() {
+                if let fbRoster = data[rosterName] as? [String: Any],
+                   let fbGoalies = fbRoster[goaliesKey] as? [[String: Any]],
+                   let fbField = fbRoster[fieldKey] as? [[String: Any]]
+                {
+                    for fbGoalie in fbGoalies {
+                        if let name = fbGoalie[nameKey] as? String,
+                           let num = fbGoalie[numberKey] as? Int,
+                           let notes = fbGoalie[notesKey] as? String {
+                            lineup.addGoalie(name: name, num: num, notes: notes)
+                        }
+                    }
+                    for fbPlayer in fbField {
+                        if let name = fbPlayer[nameKey] as? String,
+                           let num = fbPlayer[numberKey] as? Int,
+                           let notes = fbPlayer[notesKey] as? String {
+                            lineup.addFieldPlayer(name: name, num: num, notes: notes)
+                        }
+                    }
+                }
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        return lineup
     }
+    
+    /*
+     * createNewRoster() creates a new roster in the current year in firebase. Used in NewRosterView() and EditRosterView()
+     */
+    func createNewRoster(team: String, lineup: LineupWithCapNumbers) async throws {
+        do {
+            var rosterData: [String: Any] = [:]
+            
+            var fieldData: [Any] = []
+            for player: Player in lineup.field {
+                var playerData: [String: Any] = [:]
+                playerData[nameKey] = player.name
+                playerData[numberKey] = player.num
+                playerData[notesKey] = player.notes
+                fieldData.append(playerData)
+            }
+            rosterData[fieldKey] = fieldData
+            
+            var goaliesData: [Any] = []
+            for goalie: Player in lineup.goalies {
+                var goalieData: [String: Any] = [:]
+                goalieData[nameKey] = goalie.name
+                goalieData[numberKey] = goalie.num
+                goalieData[notesKey] = goalie.notes
+                goaliesData.append(goalieData)
+            }
+            rosterData[goaliesKey] = goaliesData
+            
+            try await db.collection(rostersCollection)
+                .document(currentYear)
+                .setData([team: rosterData], merge: true) // MUST MERGE! otherwise all rosters are lost
+
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+//    func updateRoster(team: String, lineup: LineupWithCapNumbers) async throws {
+//        do {
+//            
+//        } catch {
+//            print(error.localizedDescription)
+//        }
+//    }
+    
+    /* returns a Lineup() given the teamName */
+//    func getFullLineupOf(teamName: String) -> LineupWithCapNumbers {
+//        return rosters[teamName] ?? Lineup()
+//        
+//    }
     
     /* Creates a game document in Fireabse */
     func createGameDocument(gameName: String, homeTeam: String, awayTeam: String) async throws -> String {
         let newGameName = gameName + "_" + String(Int(Date().timeIntervalSince1970))
         do {
-            var gameData: [String: Any] = [:]
-            gameData[timestampField] = FieldValue.serverTimestamp()
-            gameData[homeTeamKey] = homeTeam
-            gameData[awayTeamKey] = awayTeam
+            var gameDocData: [String: Any] = [:]
+            gameDocData[timestampField] = FieldValue.serverTimestamp()
+            gameDocData[homeTeamKey] = homeTeam
+            gameDocData[awayTeamKey] = awayTeam
             
             try await db.collection(gamesCollection)
                 .document(currentYear)
                 .collection(newGameName)
                 .document(metadataDocument)
-                .setData(gameData)
+                .setData(gameDocData)
             
             // add game name to game_names collection, set is_finished to false
             try await db.collection(gameNamesCollection)
@@ -366,22 +485,43 @@ class FirebaseManager: ObservableObject {
     
     /* creates a lineup stat in the given gameCollectionName */
     func createLineupsStat(gameCollectionName: String, quarter: Int, timeString: String,
-                           homeInTheGame: Lineup, awayInTheGame: Lineup) async throws {
+                           homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) async throws {
         
         assert(!gameCollectionName.isEmpty)
         
         let timeElapsed = toTimeElapsed(timeString: timeString, quarter: quarter)
+        
+        var homeGoalies: [[String: Any]] = []
+        for goalie in homeInTheGame.goalies {
+            homeGoalies.append([nameKey: goalie.name, numberKey: goalie.num, notesKey: goalie.notes])
+        }
+        
+        var homeField: [[String: Any]] = []
+        for player in homeInTheGame.field {
+            homeField.append([nameKey: player.name, numberKey: player.num, notesKey: player.notes])
+        }
+        
+        var awayGoalies: [[String: Any]] = []
+        for goalie in awayInTheGame.goalies {
+            awayGoalies.append([nameKey: goalie.name, numberKey: goalie.num, notesKey: goalie.notes])
+        }
+        
+        var awayField: [[String: Any]] = []
+        for player in awayInTheGame.field {
+            awayField.append([nameKey: player.name, numberKey: player.num, notesKey: player.notes])
+        }
+
         let lineupData: [String: Any] = [
             gameTimeField: timeElapsed,
             statTypeField: StatType.lineup,
             statField: [
                 LineupKeys.homeInTheGame: [
-                    LineupKeys.goalies: homeInTheGame.goalies,
-                    LineupKeys.field: homeInTheGame.field
+                    LineupKeys.goalies: homeGoalies,
+                    LineupKeys.field: homeField
                 ],
                 LineupKeys.awayInTheGame: [
-                    LineupKeys.goalies: awayInTheGame.goalies,
-                    LineupKeys.field: awayInTheGame.field
+                    LineupKeys.goalies: awayGoalies,
+                    LineupKeys.field: awayField
                 ]
             ],
         ]

@@ -35,7 +35,7 @@ struct SelectLiveGameView: View {
                             }
                         }
                     }
-            } else {
+            } else if gameNames.count > 0 {
                 Form {
                     ForEach(gameNames, id: \.self) { gameCollectionName in
                         let gameTuple: (String, String, String) = convertgameCollectionName(gameCollectionName: gameCollectionName)
@@ -53,6 +53,10 @@ struct SelectLiveGameView: View {
                                 .foregroundColor(.primary)
                         }
                     }
+                }
+            } else {
+                VStack {
+                    Text("No live games")
                 }
             }
         }

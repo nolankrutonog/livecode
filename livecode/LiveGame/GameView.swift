@@ -19,10 +19,10 @@ struct GameView: View {
     @State private var currentQuarter = 1
     @State private var showNewStat = false
     
-    @State private var homeInTheGame = Lineup()
-    @State private var homeBench = Lineup()
-    @State private var awayInTheGame = Lineup()
-    @State private var awayBench = Lineup()
+    @State private var homeInTheGame = LineupWithCapNumbers()
+    @State private var homeBench = LineupWithCapNumbers()
+    @State private var awayInTheGame = LineupWithCapNumbers()
+    @State private var awayBench = LineupWithCapNumbers()
     
     @State private var showingAlert = false
     @State private var navigateToFinishedGameStats = false
@@ -92,8 +92,8 @@ struct GameView: View {
             NavigationLink(
                 destination: LineupsView(homeTeam: homeTeam, awayTeam: awayTeam, quarter: currentQuarter,
                                          gameCollectionName: gameCollectionName,
-                                         homeInTheGame: $homeInTheGame, homeBench: $homeBench,
-                                         awayInTheGame: $awayInTheGame, awayBench: $awayBench)
+                                         homeInTheGame: homeInTheGame, homeBench: homeBench,
+                                         awayInTheGame: awayInTheGame, awayBench: awayBench)
                 .environmentObject(firebaseManager)
             ) {
                 Text("Lineups")
@@ -167,12 +167,14 @@ struct GameView: View {
             if !hasAppeared {
                 hasAppeared = true // Set this to true so it only runs once
                 
-                homeBench = firebaseManager.getFullLineupOf(teamName: homeTeam)
-                awayBench = firebaseManager.getFullLineupOf(teamName: awayTeam)
-                
-                // TODO: comment when done testing
-                homeBench = stanfordFullRoster
-                awayBench = uclaFullRoster
+                Task {
+                    do {
+                        try await homeBench = firebaseManager.fetchRoster(rosterName: homeTeam)
+                        try await awayBench = firebaseManager.fetchRoster(rosterName: awayTeam)
+                    } catch {
+                        print(error.localizedDescription)
+                    }
+                }
                 
                 Task {
                     do {
@@ -192,25 +194,41 @@ struct GameView: View {
         }
     }
     
-    private func updateLineups(_ newLineup: [String: Lineup]) {
+    private func updateLineups(_ newLineup: [String: LineupWithCapNumbers]) {
         // Move players from in the game to the bench
         homeBench.field.append(contentsOf: homeInTheGame.field)
+        print("homeBench.field:")
+        for player in homeBench.field {
+            print("\t\(player.name)")
+        }
         homeBench.goalies.append(contentsOf: homeInTheGame.goalies)
         awayBench.field.append(contentsOf: awayInTheGame.field)
         awayBench.goalies.append(contentsOf: awayInTheGame.goalies)
         
         // Update inTheGame lineups
-        homeInTheGame = newLineup[homeTeamKey] ?? Lineup()
-        awayInTheGame = newLineup[awayTeamKey] ?? Lineup()
-        
+        homeInTheGame = newLineup[homeTeamKey] ?? LineupWithCapNumbers()
+        print("\n\nhomeInTheGame.field:")
+        for player in homeInTheGame.field {
+            print("\t\(player.name)")
+        }
+        awayInTheGame = newLineup[awayTeamKey] ?? LineupWithCapNumbers()
         // Remove inTheGame players from the benches
-        homeBench.field.removeAll { homeInTheGame.field.contains($0) }
-        homeBench.goalies.removeAll { homeInTheGame.goalies.contains($0) }
-        awayBench.field.removeAll { awayInTheGame.field.contains($0) }
-        awayBench.goalies.removeAll { awayInTheGame.goalies.contains($0) }
+        
+        homeBench.field.removeAll { player in
+            homeInTheGame.field.contains { $0.name == player.name }
+        }
+        homeBench.goalies.removeAll { player in
+            homeInTheGame.goalies.contains{ $0.name == player.name }
+        }
+        
+        awayBench.field.removeAll { player in
+            awayInTheGame.field.contains { $0.name == player.name }
+        }
+        awayBench.goalies.removeAll { player in
+            awayInTheGame.goalies.contains { $0.name == player.name }
+        }
     }
 }
-
 
 
 struct GameView_Previews: PreviewProvider {
@@ -218,8 +236,8 @@ struct GameView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationStack {
-            GameView(homeTeam: "Stanford", awayTeam: "UCLA",
-                     gameCollectionName: "Stanford_vs_UCLA_2024-09-12_1726197263")
+            GameView(homeTeam: "UCLA", awayTeam: "USC",
+                     gameCollectionName: "UCLA_vs_USC_2024-09-20_1726879121")
             .environmentObject(firebaseManager)
         }
     }

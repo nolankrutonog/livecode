@@ -14,8 +14,8 @@ struct CreateTurnoverView: View {
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
-    let homeInTheGame: Lineup
-    let awayInTheGame: Lineup
+    let homeInTheGame: LineupWithCapNumbers
+    let awayInTheGame: LineupWithCapNumbers
     
     @State private var timeString: String = ""
     @State private var selectedTeam: String = ""
@@ -24,7 +24,7 @@ struct CreateTurnoverView: View {
     @State private var showingAlert = false
     @State private var isTimePickerPresented = false
     
-    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) {
         self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
@@ -103,20 +103,20 @@ struct CreateTurnoverView: View {
             
             ForEach(players, id: \.self) { player in
                 Button(action: {
-                    selectedPlayer = player
+                    selectedPlayer = player.name
                 }) {
                     HStack {
-                        Text(player)
-                            .foregroundColor(selectedPlayer == player ? .secondary: .primary)
+                        Text(player.name)
+                            .foregroundColor(selectedPlayer == player.name ? .secondary: .primary)
                         Spacer()
-                        if selectedPlayer == player {
+                        if selectedPlayer == player.name {
                             Image(systemName: "checkmark")
                                 .foregroundColor(.white)
                         }
                     }
                     .padding(.vertical, 8)  // Reduced spacing between the names
                     .padding(.horizontal)
-                    .background(selectedPlayer == player ? Color.gray : Color.clear)
+                    .background(selectedPlayer == player.name ? Color.gray : Color.clear)
                     .cornerRadius(8)
                 }
             }

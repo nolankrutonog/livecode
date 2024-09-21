@@ -10,61 +10,59 @@ import SwiftUI
 struct NewRosterView: View {
     @EnvironmentObject var firebaseManager: FirebaseManager
     @Environment(\.presentationMode) var presentationMode
-    
+
     @State private var rosterName: String = ""
-    @State private var lineup: Lineup = Lineup()
-    
-    @State private var showNewPlayerSheet: Bool = false
-    
+    @StateObject private var lineup = LineupWithCapNumbers()
+
+    @State private var showAddPlayerSheet: Bool = false
+    @FocusState private var isNameFieldFocused: Bool
+
     var body: some View {
-        VStack {
-            
-            TextField("Roster name", text: $rosterName)
-                .font(.title2) // Set the font size to title
-                .padding(15)  // Padding inside the text field
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray, lineWidth: 2) // Add the outline
-               )
-            
+        Form {
+            Section(
+                header: Text("Roster name"),
+                footer: footer()
+//                {
+//                    var text = ""
+//                    if lineup.goalies.count < 1 && lineup.field.count < 6 {
+//                        let text = "Creating a new roster requires at least 6 field players and 1 goalie"
+//                    }
+//                    Text(text)
+//                        .font(.footnote)
+//                        .foregroundColor(.gray)
+//                }
+            ) {
+                TextField("Enter roster name", text: $rosterName)
+                    .font(.title2)
+                    .padding(.vertical, 10)
+                    .focused($isNameFieldFocused)
+            }
+
             if lineup.goalies.count > 0 {
-                HStack {
-                    Text("Goalies")
-                        .font(.title2)
-                        .bold()
-                    
-                    Spacer()
-
+                Section("Goalies") {
+                    ForEach(lineup.goalies) { goalie in
+                        Text("\(goalie.num). \(goalie.name)")
+                    }
+                    .onDelete(perform: lineup.removeGoalie)
                 }
-                
-                ForEach(lineup.goalies, id: \.self) { goalie in
-                    Text(goalie)
-                    
-                }
-
             }
-            
+
             if lineup.field.count > 0 {
-                HStack {
-                    Text("Field")
-                        .font(.title2)
-                        .bold()
-                    
-                    Spacer()
-                }
-                
-                ForEach(lineup.field, id: \.self) { player in
-                    Text(player)
-                    
+                Section("Field") {
+                    ForEach(lineup.field) { player in
+                        Text("\(player.num). \(player.name)")
+                    }
+                    .onDelete(perform: lineup.removeFieldPlayer)
                 }
             }
-
-            Spacer()
         }
-        .padding()
+        .onTapGesture {
+            // Dismiss the keyboard when tapping outside the TextField
+            isNameFieldFocused = false
+        }
         .overlay(
             Button(action: {
-                showNewPlayerSheet = true
+                showAddPlayerSheet = true
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 32))
@@ -74,45 +72,65 @@ struct NewRosterView: View {
                     .clipShape(Circle())
                     .shadow(radius: 10)
             }
-                .padding(.horizontal, 30)
-                .padding(.vertical, 10)
-                , alignment: .bottomTrailing // Align the button to the bottom-right
+            .padding(.horizontal, 30)
+            .padding(.vertical, 10),
+            alignment: .bottomTrailing
         )
-        
         .navigationBarBackButtonHidden(true)
+        .navigationTitle("New Roster")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                }
+            cancelButton()
+            doneButton()
+            
+        }
+        .sheet(isPresented: $showAddPlayerSheet) {
+            NavigationStack {
+                AddPlayerView(lineup: lineup)
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
-                    Task {
-                        do {
-                            // try await firebaseManager.createNewRoster()
-                        } catch {
-                            print(error.localizedDescription)
-                        }
+        }
+    }
+    
+    private func cancelButton() -> some ToolbarContent {
+        return ToolbarItem(placement: .navigationBarLeading) {
+            Button("Cancel") {
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
+    }
+    
+    private func doneButton() -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") {
+                Task {
+                    do {
+                        try await firebaseManager.createNewRoster(team: rosterName, lineup: lineup)
+                        presentationMode.wrappedValue.dismiss()
+                    } catch {
+                        print(error.localizedDescription)
                     }
                 }
             }
+            .disabled(!canCreateRoster())
         }
-        .sheet(isPresented: $showNewPlayerSheet) {
-            AddPlayerView(lineup: $lineup)
+    }
+    
+    private func footer() -> some View {
+        var text = ""
+        if lineup.goalies.count < 1 || lineup.field.count < 6 {
+            text = "Creating a new roster requires at least 6 field players and 1 goalie"
         }
+        return Text(text)
+            .font(.footnote)
+            .foregroundColor(.gray)
+    }
+
+    private func canCreateRoster() -> Bool {
+        return !rosterName.isEmpty && lineup.field.count >= 6 && lineup.goalies.count >= 1
     }
 }
 
-struct AddPlayerView: View {
-    @Binding var lineup: Lineup
-    
-    var body: some View {
-        VStack {
-            
-        }
-    }
-}
+
 
 struct NewRosterView_Preview: PreviewProvider {
     static var previews: some View {

@@ -8,14 +8,90 @@
 
 import SwiftUI
 
-//struct Lineup {
+//struct Lineup: Equatable, Hashable {
 //    var goalies: [String] = []
 //    var field: [String] = []
 //}
 
-struct Lineup: Equatable, Hashable {
-    var goalies: [String] = []
-    var field: [String] = []
+class Player: Identifiable, ObservableObject, Equatable, Hashable {
+    static func == (lhs: Player, rhs: Player) -> Bool {
+            return lhs.id == rhs.id
+        }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    var id = UUID()
+    var name: String
+    var num: Int
+    var notes: String
+    
+    init(num: Int, name: String, notes: String) {
+        self.name = name
+        self.num = num
+        self.notes = notes
+    }
+    
+    func copy() -> Player {
+        return Player(num: self.num, name: self.name, notes: self.notes)
+    }
+}
+
+class LineupWithCapNumbers: ObservableObject, Equatable {
+    @Published var goalies: [Player] = []
+    @Published var field: [Player] = []
+    
+    static func == (lhs: LineupWithCapNumbers, rhs: LineupWithCapNumbers) -> Bool {
+        return lhs.goalies == rhs.goalies && lhs.field == rhs.field
+    }
+    
+    func copy() -> LineupWithCapNumbers {
+        let copy = LineupWithCapNumbers()
+        copy.goalies = self.goalies.map { $0.copy() }
+        copy.field = self.field.map { $0.copy() }
+        return copy
+    }
+        
+    func update(from other: LineupWithCapNumbers) {
+        self.goalies = other.goalies.map { $0.copy() }
+        self.field = other.field.map { $0.copy() }
+    }
+    
+    public func addGoalie(name: String, num: Int, notes: String) {
+        let player = Player(num: num, name: name, notes: notes)
+        goalies.append(player)
+        goalies.sort { $0.num < $1.num}
+    }
+    
+    public func addFieldPlayer(name: String, num: Int, notes: String) {
+        let player = Player(num: num, name: name, notes: notes)
+        field.append(player)
+        field.sort { $0.num < $1.num }
+    }
+    
+    public func removePlayer(index: Int, isField: Bool) {
+        if isField {
+            field.remove(at: index)
+        } else {
+            goalies.remove(at: index)
+        }
+    }
+    
+    
+    public func removeGoalie(at offsets: IndexSet) {
+        goalies.remove(atOffsets: offsets)
+    }
+    
+    public func removeFieldPlayer(at offsets: IndexSet) {
+        field.remove(atOffsets: offsets)
+    }
+    
+    public func reset() {
+        goalies.removeAll()
+        field.removeAll()
+    }
+
 }
 
 
@@ -28,10 +104,10 @@ struct LineupsView: View {
     let quarter: Int
     let gameCollectionName: String
     
-    @Binding var homeInTheGame: Lineup
-    @Binding var homeBench: Lineup
-    @Binding var awayInTheGame: Lineup
-    @Binding var awayBench: Lineup
+    @ObservedObject var homeInTheGame: LineupWithCapNumbers
+    @ObservedObject var homeBench: LineupWithCapNumbers
+    @ObservedObject var awayInTheGame: LineupWithCapNumbers
+    @ObservedObject var awayBench: LineupWithCapNumbers
 
     @Environment(\.presentationMode) var presentationMode
     
@@ -43,10 +119,10 @@ struct LineupsView: View {
     @State private var timeString: String = ""
 
     // Backup the original state
-    @State private var originalHomeInTheGame: Lineup = Lineup(goalies: [], field: [])
-    @State private var originalHomeBench: Lineup = Lineup(goalies: [], field: [])
-    @State private var originalAwayInTheGame: Lineup = Lineup(goalies: [], field: [])
-    @State private var originalAwayBench: Lineup = Lineup(goalies: [], field: [])
+    @StateObject private var originalHomeInTheGame = LineupWithCapNumbers()
+    @StateObject private var originalHomeBench = LineupWithCapNumbers()
+    @StateObject private var originalAwayInTheGame = LineupWithCapNumbers()
+    @StateObject private var originalAwayBench = LineupWithCapNumbers()
     
     var body: some View {
         VStack {
@@ -84,9 +160,9 @@ struct LineupsView: View {
             
             // Content View
             if selectedTab == 0 {
-                TeamLineupView(teamName: homeTeam, inTheGame: $homeInTheGame, bench: $homeBench)
+                TeamLineupView(teamName: homeTeam, inTheGame: homeInTheGame, bench: homeBench)
             } else {
-                TeamLineupView(teamName: awayTeam, inTheGame: $awayInTheGame, bench: $awayBench)
+                TeamLineupView(teamName: awayTeam, inTheGame: awayInTheGame, bench: awayBench)
             }
             
             Spacer()
@@ -96,10 +172,14 @@ struct LineupsView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Cancel") {
                     // Revert to the original state when cancel is pressed
-                    homeInTheGame = originalHomeInTheGame
-                    homeBench = originalHomeBench
-                    awayInTheGame = originalAwayInTheGame
-                    awayBench = originalAwayBench
+//                    homeInTheGame = originalHomeInTheGame
+                    homeInTheGame.update(from: originalHomeInTheGame)
+//                    homeBench = originalHomeBench
+                    homeBench.update(from: originalHomeBench)
+//                    awayInTheGame = originalAwayInTheGame
+                    awayInTheGame.update(from: originalAwayInTheGame)
+//                    awayBench = originalAwayBench
+                    awayBench.update(from: originalAwayBench)
                     presentationMode.wrappedValue.dismiss()
                 }
             }
@@ -111,10 +191,10 @@ struct LineupsView: View {
         }
         .onAppear {
             // Backup the original state when the view appears
-            originalHomeInTheGame = homeInTheGame
-            originalHomeBench = homeBench
-            originalAwayInTheGame = awayInTheGame
-            originalAwayBench = awayBench
+            originalHomeInTheGame.update(from: homeInTheGame)
+            originalHomeBench.update(from: homeBench)
+            originalAwayInTheGame.update(from: awayInTheGame)
+            originalAwayBench.update(from: awayBench)
         }
         .alert(isPresented: $showingDoneAlert) {
             Alert(
@@ -136,8 +216,8 @@ struct LineupsView: View {
                             timeString: $timeString.wrappedValue,
 //                            homeTeam: homeTeam,
 //                            awayTeam: awayTeam,
-                            homeInTheGame: $homeInTheGame.wrappedValue,
-                            awayInTheGame: $awayInTheGame.wrappedValue
+                            homeInTheGame: homeInTheGame,
+                            awayInTheGame: awayInTheGame
                         )
                         presentationMode.wrappedValue.dismiss()
                     } catch {
@@ -188,10 +268,10 @@ struct LineupsView_Previews: PreviewProvider {
     @StateObject static var firebaseManager = FirebaseManager()
 
 //    let gameCollectionName = "Stanford vs. UCLA 08-18-2024 1724474054"
-    @State static var homeInTheGame = stanfordInTheGame
-    @State static var homeBench = stanfordBench
-    @State static var awayInTheGame = uclaInTheGame
-    @State static var awayBench = uclaBench
+    @StateObject static var homeInTheGame = stanfordInTheGame
+    @StateObject static var homeBench = stanfordBench
+    @StateObject static var awayInTheGame = uclaInTheGame
+    @StateObject static var awayBench = uclaBench
     
     static var previews: some View {
         LineupsView(
@@ -199,10 +279,10 @@ struct LineupsView_Previews: PreviewProvider {
             awayTeam: "UCLA",
             quarter: 1,
             gameCollectionName: "Stanford_vs_UCLA_2024-08-28_1724874036",
-            homeInTheGame: $homeInTheGame,
-            homeBench: $homeBench,
-            awayInTheGame: $awayInTheGame,
-            awayBench: $awayBench
+            homeInTheGame: homeInTheGame,
+            homeBench: homeBench,
+            awayInTheGame: awayInTheGame,
+            awayBench: awayBench
         )
         .environmentObject(firebaseManager)
     }

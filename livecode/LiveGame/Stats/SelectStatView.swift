@@ -14,10 +14,10 @@ struct SelectStatView: View {
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
-    let homeInTheGame: Lineup
-    let awayInTheGame: Lineup
+    let homeInTheGame: LineupWithCapNumbers
+    let awayInTheGame: LineupWithCapNumbers
    
-    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) {
         self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam

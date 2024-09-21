@@ -43,4 +43,11 @@ let homeTeamKey = "home_team"
 let awayTeamKey = "away_team"
 
 
+let fieldKey = "field"
+let goaliesKey = "goalies"
+let nameKey = "name"
+let numberKey = "number"
+let notesKey = "notes"
+
+
 

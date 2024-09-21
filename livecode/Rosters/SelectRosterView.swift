@@ -13,52 +13,36 @@ struct SelectRosterView: View {
     @State private var rosterNames: [String] = []
     
     var body: some View {
-        VStack {
-            Form {
-                ForEach(rosterNames, id: \.self) { rosterName in
-                    NavigationLink(destination: EditRosterView(rosterName: rosterName).environmentObject(firebaseManager)) {
-                        Text(rosterName)
-                            .font(.title3)
-                    }
+        Form {
+            ForEach(rosterNames, id: \.self) { rosterName in
+                NavigationLink(destination: DisplayRosterView(rosterName: rosterName).environmentObject(firebaseManager)) {
+                    Text(rosterName)
+                        .font(.title3)
                 }
             }
         }
         .onAppear {
-            rosterNames = ["Stanford", "UCLA"]
+//            rosterNames = ["Stanford", "UCLA"]
 //            TODO: uncomment when done testing
-//            Task {
-//                do {
-//                    rosterNames = try await firebaseManager.fetchRosterNames()
-//                } catch {
-//                    print(error.localizedDescription)
-//                }
-//            }
+            Task {
+                do {
+                    rosterNames = try await firebaseManager.fetchRosterNames()
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
         }
         .navigationTitle("Select Roster")
         .toolbar {
             ToolbarItem {
                 NavigationLink(destination: NewRosterView().environmentObject(firebaseManager)) {
-                    Text("Add Roster")
+                    Text("New Roster")
                 }
             }
         }
     }
 }
 
-
-
-
-struct EditRosterView: View {
-    @EnvironmentObject var firebaseManager: FirebaseManager
-    
-    let rosterName: String
-    
-    var body: some View {
-        VStack {
-           Text("Edit roster view")
-        }
-    }
-}
 
 struct SelectRosterView_Preview: PreviewProvider {
     static var previews: some View {

@@ -17,8 +17,8 @@ struct CreateShotSingleView: View {
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
-    let homeInTheGame: Lineup
-    let awayInTheGame: Lineup
+    let homeInTheGame: LineupWithCapNumbers
+    let awayInTheGame: LineupWithCapNumbers
     
     
     @State private var selectedTeam: String = ""
@@ -39,7 +39,7 @@ struct CreateShotSingleView: View {
     @State private var is7v6: Bool = false
     @State private var goalie: String = ""
     
-    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) {
         self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
@@ -68,7 +68,7 @@ struct CreateShotSingleView: View {
                     Picker("Shooter", selection: $shooter) {
                         Text("").tag("")
                         ForEach(offense.field + offense.goalies, id: \.self) { player in
-                            Text(player).tag(player)
+                            Text(player.name).tag(player.name)
                         }
                     }
                     
@@ -148,8 +148,8 @@ struct CreateShotSingleView: View {
                             Text("").tag("")
                             Text("None").tag("None")
                             ForEach(offense.field + offense.goalies, id: \.self) { player in
-                                if player != shooter {
-                                    Text(player).tag(player)
+                                if player.name != shooter {
+                                    Text(player.name).tag(player.name)
                                 }
                             }
                         }
@@ -162,7 +162,7 @@ struct CreateShotSingleView: View {
                         Picker("Field blocked by", selection: $fieldBlockedBy) {
                             Text("").tag("")
                             ForEach(defense.field, id: \.self) { defender in
-                                Text(defender).tag(defender)
+                                Text(defender.name).tag(defender.name)
                             }
                         }
                     }
@@ -175,7 +175,7 @@ struct CreateShotSingleView: View {
                         Picker("Goalie", selection: $goalie) {
                             Text("").tag("")
                             ForEach(defense.field, id: \.self) { player in
-                                Text(player).tag(player)
+                                Text(player.name).tag(player.name)
                             }
                         }
                         .onAppear {
@@ -199,8 +199,8 @@ struct CreateShotSingleView: View {
 //                            : goalie
                     
                     if !is7v6 {
-                        // TODO: if there's no goalie in the lineup and not 7v6... need to error check with do try catch block?
-                        goalie = (selectedTeam == homeTeam ? awayInTheGame.goalies.first : homeInTheGame.goalies.first) ?? ""
+                        // TODO: if there's no goalie in the LineupWithCapNumbers and not 7v6... need to error check with do try catch block?
+                        goalie = (selectedTeam == homeTeam ? awayInTheGame.goalies.first!.name ?? "" : homeInTheGame.goalies.first!.name ?? "")
                     }
                     
                     if shotResult == ShotKeys.shotResults.goal {

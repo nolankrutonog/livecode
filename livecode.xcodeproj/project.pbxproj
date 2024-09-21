@@ -61,6 +61,8 @@
 		41A0CDC92C7144EC00F74BFD /* livecodeUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDC82C7144EC00F74BFD /* livecodeUITestsLaunchTests.swift */; };
 		41A0CDD62C7147BC00F74BFD /* NewGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDD52C7147BC00F74BFD /* NewGameView.swift */; };
 		41A0CDD82C7147C900F74BFD /* PreviousGamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A0CDD72C7147C900F74BFD /* PreviousGamesView.swift */; };
+		41B641FC2C98DA9500300814 /* AddPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B641FB2C98DA9500300814 /* AddPlayerView.swift */; };
+		41B641FE2C98E9AC00300814 /* DisplayRosterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B641FD2C98E9AC00300814 /* DisplayRosterView.swift */; };
 		41BD4CF92C8A437B00E8E32D /* FollowLiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD4CF82C8A437B00E8E32D /* FollowLiveGameView.swift */; };
 		41BD4CFB2C8AD67000E8E32D /* SelectLiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD4CFA2C8AD67000E8E32D /* SelectLiveGameView.swift */; };
 /* End PBXBuildFile section */
@@ -117,6 +119,8 @@
 		41A0CDC82C7144EC00F74BFD /* livecodeUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = livecodeUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		41A0CDD52C7147BC00F74BFD /* NewGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameView.swift; sourceTree = "<group>"; };
 		41A0CDD72C7147C900F74BFD /* PreviousGamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviousGamesView.swift; sourceTree = "<group>"; };
+		41B641FB2C98DA9500300814 /* AddPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPlayerView.swift; sourceTree = "<group>"; };
+		41B641FD2C98E9AC00300814 /* DisplayRosterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayRosterView.swift; sourceTree = "<group>"; };
 		41BD4CF82C8A437B00E8E32D /* FollowLiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowLiveGameView.swift; sourceTree = "<group>"; };
 		41BD4CFA2C8AD67000E8E32D /* SelectLiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLiveGameView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -189,6 +193,8 @@
 			children = (
 				416822722C783AFB007E7190 /* SelectRosterView.swift */,
 				413F88402C9619970066DF21 /* NewRosterView.swift */,
+				41B641FB2C98DA9500300814 /* AddPlayerView.swift */,
+				41B641FD2C98E9AC00300814 /* DisplayRosterView.swift */,
 			);
 			path = Rosters;
 			sourceTree = "<group>";
@@ -456,8 +462,10 @@
 				41A0CDD62C7147BC00F74BFD /* NewGameView.swift in Sources */,
 				4168A83B2C7AB04000CFA510 /* TimePickerView.swift in Sources */,
 				413E79052C7BB3AF00A7CEEB /* CreateStealView.swift in Sources */,
+				41B641FE2C98E9AC00300814 /* DisplayRosterView.swift in Sources */,
 				41A0CDD82C7147C900F74BFD /* PreviousGamesView.swift in Sources */,
 				410A6C942C82B80700764F3E /* CreateShotSingleView.swift in Sources */,
+				41B641FC2C98DA9500300814 /* AddPlayerView.swift in Sources */,
 				411485162C72A81600006239 /* Constants.swift in Sources */,
 				411753512C73E375007B3717 /* FinishedGameStats.swift in Sources */,
 				413F883E2C912F630066DF21 /* GameData.swift in Sources */,

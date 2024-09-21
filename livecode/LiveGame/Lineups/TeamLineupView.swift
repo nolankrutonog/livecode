@@ -9,26 +9,10 @@ import SwiftUI
 
 struct TeamLineupView: View {
     let teamName: String
-    @Binding var inTheGame: Lineup
-    @Binding var bench: Lineup
+    @ObservedObject var inTheGame: LineupWithCapNumbers
+    @ObservedObject var bench: LineupWithCapNumbers
     @State private var is7v6: Bool = false
     
-//    @State private var fullInTheGame: [String]
-//    @State private var fullBench: [String]
-    
-    init(teamName: String, inTheGame: Binding<Lineup>, bench: Binding<Lineup>) {
-        self.teamName = teamName
-        self._inTheGame = inTheGame
-        self._bench = bench
-//        self._isSevenOnSix = isSevenOnSix
-        
-//        _fullInTheGame = State(initialValue: inTheGame.wrappedValue.goalies + inTheGame.wrappedValue.field)
-//        _fullBench = State(initialValue: bench.wrappedValue.goalies + bench.wrappedValue.field)
-        if inTheGame.field.count == 7 {
-            is7v6 = true
-        }
-    }
-
     let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
     let buttonWidth: CGFloat = 120 // Fixed width for buttons
     let buttonHeight: CGFloat = 40 // Fixed height for buttons
@@ -47,6 +31,11 @@ struct TeamLineupView: View {
             }
 
         }
+        .onAppear {
+            if inTheGame.field.count == 7 {
+                is7v6 = true
+            }
+        }
     }
     
     private func sevenOnSixView() -> some View {
@@ -64,15 +53,11 @@ struct TeamLineupView: View {
                         Button(action: {
                             // going to bench
                             if let index = inTheGame.field.firstIndex(of: player) {
-                                inTheGame.field.remove(at: index)
-                                bench.field.insert(player, at: 0)
-                            } 
-//                            else if let index = inTheGame.goalies.firstIndex(of: player) {
-//                                inTheGame.goalies.remove(at: index)
-//                                bench.goalies.insert(player, at: 0)
-//                            }
+                                inTheGame.removePlayer(index: index, isField: true)
+                                bench.addFieldPlayer(name: player.name, num: player.num, notes: player.notes)
+                            }
                         }) {
-                            Text(abbreviateName(player))
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -94,22 +79,12 @@ struct TeamLineupView: View {
                             let numInGame = inTheGame.field.count + inTheGame.goalies.count
                             if numInGame < 7 {
                                 if let index = bench.field.firstIndex(of: player) {
-                                    bench.field.remove(at: index)
-                                } 
-//                                else if let index = bench.goalies.firstIndex(of: player) {
-//                                    bench.goalies.remove(at: index)
-//                                }
-                                inTheGame.field.append(player)
-
-//                                let hasGoalie = inTheGame.goalies.count == 1 ? true : false
-//                                if hasGoalie {
-//                                    inTheGame.field.append(player)
-//                                } else {
-//                                    inTheGame.goalies.append(player)
-//                                }
+                                    bench.removePlayer(index: index, isField: true)
+                                }
+                                inTheGame.addFieldPlayer(name: player.name, num: player.num, notes: player.notes)
                             }
                         }) {
-                            Text(abbreviateName(player))
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -132,26 +107,12 @@ struct TeamLineupView: View {
             // move all goalies to bench
             for goalie in inTheGame.goalies {
                 if let index = inTheGame.goalies.firstIndex(of: goalie) {
-                    inTheGame.goalies.remove(at: index)
-                    bench.goalies.append(goalie)
+                    inTheGame.removePlayer(index: index, isField: false)
+                    bench.addGoalie(name: goalie.name, num: goalie.num, notes: goalie.notes)
                 }
             }
         }
     }
-    
-//    private func sevenOnSixView2() -> some View {
-//        
-//        return VStack {
-//            HStack {
-//                Text("7v6")
-//                    .font(.title)
-//                    .bold()
-//                Spacer()
-//            }
-//            
-//            
-//        }
-//    }
     
     private func regularView() -> some View {
         return VStack {
@@ -167,11 +128,14 @@ struct TeamLineupView: View {
                     ForEach(inTheGame.goalies, id: \.self) { player in
                         Button(action: {
                             if let index = inTheGame.goalies.firstIndex(of: player) {
-                                inTheGame.goalies.remove(at: index)
-                                bench.goalies.insert(player, at: 0)
+                                //                                inTheGame.goalies.remove(at: index)
+                                //                                bench.goalies.insert(player, at: 0)
+                                
+                                inTheGame.removePlayer(index: index, isField: false)
+                                bench.addGoalie(name: player.name, num: player.num, notes: player.notes)
                             }
                         }) {
-                            Text(abbreviateName(player))
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -189,15 +153,18 @@ struct TeamLineupView: View {
                     ForEach(bench.goalies, id: \.self) { player in
                         Button(action: {
                             if let index = bench.goalies.firstIndex(of: player) {
-                                bench.goalies.remove(at: index)
+                                bench.removePlayer(index: index, isField: false)
+                                //                                bench.goalies.remove(at: index)
                                 if !inTheGame.goalies.isEmpty {
                                     let currentGoalie = inTheGame.goalies.removeFirst()
-                                    bench.goalies.insert(currentGoalie, at: 0)
+                                    //                                    bench.goalies.insert(currentGoalie, at: 0)
+                                    bench.addGoalie(name: currentGoalie.name, num: currentGoalie.num, notes: currentGoalie.notes)
                                 }
-                                inTheGame.goalies.append(player)
+                                //                                inTheGame.goalies.append(player)
+                                inTheGame.addGoalie(name: player.name, num: player.num, notes: player.notes)
                             }
                         }) {
-                            Text(abbreviateName(player))
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -227,13 +194,15 @@ struct TeamLineupView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(inTheGame.field, id: \.self) { player in
-                        Button(action: {
+                        Button(action:
+                                {
                             if let index = inTheGame.field.firstIndex(of: player) {
-                                inTheGame.field.remove(at: index)
-                                bench.field.insert(player, at: 0)
+                                inTheGame.removePlayer(index: index, isField: true)
+                                bench.addFieldPlayer(name: player.name, num: player.num, notes: player.notes)
                             }
-                        }) {
-                            Text(abbreviateName(player))
+                        }
+                        ) {
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -252,19 +221,19 @@ struct TeamLineupView: View {
                         Button(action: {
                             if inTheGame.field.count < 6 {
                                 if let index = bench.field.firstIndex(of: player) {
-                                    bench.field.remove(at: index)
-                                    inTheGame.field.append(player)
+                                    bench.removePlayer(index: index, isField: true)
+                                    inTheGame.addFieldPlayer(name: player.name, num: player.num, notes: player.notes)
                                 }
                             }
                         }) {
-                            Text(abbreviateName(player))
+                            Text("\(player.num). \(abbreviateName(player.name))")
                                 .font(.system(size: 12, weight: .medium))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .padding()
                                 .frame(width: buttonWidth, height: buttonHeight)
                                 .background(Color.gray.opacity(0.3)) // Lighter gray background
-                                .foregroundColor(.primary) 
+                                .foregroundColor(.primary)
                                 .cornerRadius(20)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
@@ -275,16 +244,17 @@ struct TeamLineupView: View {
                 }
             }
             .frame(maxHeight: .infinity) // Extend to fill vertical space
+            
         }
         .padding()
     }
-    
-    
+        
+        
     // Helper function to abbreviate names if they are too long
     func abbreviateName(_ name: String) -> String {
         let maxLength = maxNameLength
         var abbreviatedName = name
-
+        
         let nameComponents = name.split(separator: " ")
         if let lastName = nameComponents.last {
             let firstName = String(nameComponents.first ?? "")
@@ -304,32 +274,52 @@ struct TeamLineupView: View {
         
         return abbreviatedName
     }
-    
+        
     func calculateScrollViewHeight(for numberOfItems: Int) -> CGFloat {
         let rows = (numberOfItems + 2) / 3 // Calculate number of rows needed
         return CGFloat(rows) * (buttonHeight + 10) // Adjust height based on number of rows
     }
+    
 
 }
 
 struct TeamLineupContainerView: View {
-    @State var inTheGame: Lineup
-    @State var bench: Lineup
+    @StateObject var inTheGame: LineupWithCapNumbers
+    @StateObject var bench: LineupWithCapNumbers
     @State var isSevens: Bool = true
     let teamName: String
     
+    @State private var hasAppeared = false
+    
     var body: some View {
-        TeamLineupView(teamName: teamName, inTheGame: $inTheGame, bench: $bench)
+        TeamLineupView(teamName: teamName, inTheGame: inTheGame, bench: bench)
+            .onAppear {
+                if !hasAppeared {
+                    hasAppeared = true
+                    
+                    inTheGame.addGoalie(name:"Goalie", num:1, notes: "")
+                    for i in (2...7) {
+                        inTheGame.addFieldPlayer(name: "Player", num: i, notes: "")
+                    }
+                    
+                    bench.addGoalie(name: "Goalie1", num: 1, notes: "")
+                    for i in (8...16) {
+                        bench.addFieldPlayer(name: "Player", num: i, notes: "")
+                    }
+                }
+            }
     }
 }
 
 struct TeamLineupsView_Previews: PreviewProvider {
+    static var inTheGame = LineupWithCapNumbers()
+    static var bench = LineupWithCapNumbers()
     static var previews: some View {
         TeamLineupContainerView(
 //            inTheGame: Lineup(goalies: [], field: ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6"]),
-            inTheGame: stanfordInTheGame,
+            inTheGame: inTheGame,
 //            bench: Lineup(goalies: ["Konstantinos Mathiopoulos"], field: ["Player7", "Player8", "Player9", "Player10", "Player11"]),
-            bench: stanfordBench,
+            bench: bench,
             teamName: "Stanford"
         )
         .environmentObject(FirebaseManager())

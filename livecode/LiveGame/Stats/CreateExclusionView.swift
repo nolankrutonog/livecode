@@ -19,8 +19,8 @@ struct CreateExclusionView: View {
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
-    let homeInTheGame: Lineup
-    let awayInTheGame: Lineup
+    let homeInTheGame: LineupWithCapNumbers
+    let awayInTheGame: LineupWithCapNumbers
     
     @State private var timeString: String = ""
     @State private var isTimePickerPresented = false
@@ -31,7 +31,7 @@ struct CreateExclusionView: View {
     @State private var exclusionType: String = ""
     @State private var drawnBy: String = ""
 
-    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) {
         self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
@@ -59,7 +59,7 @@ struct CreateExclusionView: View {
                 Picker("Excluded player", selection: $excludedPlayer) {
                     Text("").tag("")
                     ForEach(players, id: \.self) { player in
-                        Text(player).tag(player)
+                        Text(player.name).tag(player.name)
                     }
                 }
                 
@@ -80,7 +80,7 @@ struct CreateExclusionView: View {
                 Picker("Drawn by", selection: $drawnBy) {
                     Text("").tag("")
                     ForEach(otherPlayers, id: \.self) { player in
-                        Text(player).tag(player)
+                        Text(player.name).tag(player.name)
                     }
                 }
                 

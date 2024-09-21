@@ -57,9 +57,9 @@ struct LiveCodeView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: SelectRosterView().environmentObject(firebaseManager)) {
                         Image(systemName: "list.triangle")
-//                            .font(.title2.bold())
                             .foregroundStyle(Color.primary)
                     }
+                    
                     .padding(.horizontal, 10)
                 }
             }

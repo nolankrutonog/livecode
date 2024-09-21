@@ -16,8 +16,8 @@ struct CreateStealView: View {
     let quarter: Int
     let homeTeam: String
     let awayTeam: String
-    let homeInTheGame: Lineup
-    let awayInTheGame: Lineup
+    let homeInTheGame: LineupWithCapNumbers
+    let awayInTheGame: LineupWithCapNumbers
     
     @State private var timeString: String = ""
     @State private var isTimePickerPresented = false
@@ -27,7 +27,7 @@ struct CreateStealView: View {
     @State private var turnoverBy: String = ""
     @State private var showingAlert = false
     
-    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: Lineup, awayInTheGame: Lineup) {
+    init(gameCollectionName: String, quarter: Int, homeTeam: String, awayTeam: String, homeInTheGame: LineupWithCapNumbers, awayInTheGame: LineupWithCapNumbers) {
         self.gameCollectionName = gameCollectionName
         self.quarter = quarter
         self.homeTeam = homeTeam
@@ -61,14 +61,14 @@ struct CreateStealView: View {
                 Picker("Stolen by", selection: $stolenBy) {
                     Text("").tag("")
                     ForEach(players, id: \.self) { player in
-                        Text(player).tag(player)
+                        Text(player.name).tag(player.name)
                     }
                 }
                 
                 Picker("Turnover by", selection: $turnoverBy) {
                     Text("").tag("")
                     ForEach(otherPlayers, id: \.self) { player in
-                        Text(player).tag(player)
+                        Text(player.name).tag(player.name)
                     }
                 }
 
